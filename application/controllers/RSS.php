@@ -26,7 +26,8 @@ class RSS extends CI_Controller
         $data = [
             'rss_output' => $rss_channel_data->RSS_XML
         ];
-        // var_dump($rss_channel_data->RSS_XML);die();
+        // echo "<pre>";var_dump($rss_channel_data->RSS_XML);echo "</pre>";die();
+        $this->output->set_header('X-CONTENT-RETURN: YES');
         $this->output->set_header('Content-Type: text/xml');
         $this->load->view('rss',$data);
 
@@ -34,13 +35,3 @@ class RSS extends CI_Controller
 }
 
 ?>
-
-<!-- <encoded>
-<![CDATA[
-    <h2>お試し</h2>
-    <img src="manga/5f43603169de4/manga_5f43603169de0.png"/>
-    <img src="manga/5f43603819785/manga_5f43603819781.png"/>
-    <img src="manga/5f43603fcd8ca/manga_5f43603fcd8c5.png"/>
-    <img src="manga/5f436046ca4d7/manga_5f436046ca4d2.png"/>
-    ]]>
-    </encoded> -->

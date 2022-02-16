@@ -15,9 +15,8 @@
 
         $this->db->select('*');
         $this->db->from('RSS_lOG_CHANNEL');
-        $this->db->where('logid',4);
-        // $this->db->order_by('logid','DESC');
-        // $this->db->limit(1);
+        $this->db->order_by('logid','DESC');
+        $this->db->limit(1);
         // var_dump($this->db->get()->row());
         return $this->db->get()->row();
     }
