@@ -16,6 +16,8 @@ class Batch extends CI_Controller {
         $this->load->helper('xml');
         $this->load->helper('text');
         $this->load->model('Manga_model','Manga_model');
+        $this->load->model('RSS_log_channel_model','RSS_log_channel_model');
+        $this->load->model('RSS_log_item_model','RSS_log_item_model');
 
         define('MAX_POST_LIMIT',30);
         define('POST_YEARS_AGO',1);
@@ -28,11 +30,17 @@ class Batch extends CI_Controller {
 
     public function insertRSS()
     {
-        echo "<pre>";
-        $this->prepareRSS();
 
+        $rss_data = $this->prepareRSS();
+        // echo "<pre>";
+        // var_dump($rss_data['channel_data']);die();
+          
+            $channel_id = $this->RSS_log_channel_model->create_rss($rss_data['channel_data']);
         
-        // echo $xml;
+            if($this->RSS_log_item_model->create_rss($rss_data['item_data'],$channel_id[0])){
+                echo 'inserted';
+            };
+
     }
 
     public function prepareRSS()
@@ -54,8 +62,9 @@ class Batch extends CI_Controller {
                 $item_data[$key]['title'] = $manga_item['title'];
                 $item_data[$key]['link'] = $manga_item['link'];
                 $item_data[$key]['guid'] = $manga_item['id'];
-                $item_data[$key]['tags_id'] = $manga_item['tags_id'];
-                $item_data[$key]['category'] = htmlspecialchars('<![CDATA[ママコマ漫画]]>');
+                // $item_data[$key]['tags_id'] = $manga_item['tags_id'];
+                // $item_data[$key]['category'] = htmlspecialchars('<![CDATA[ママコマ漫画]]>');
+                $item_data[$key]['category'] = '<![CDATA[ママコマ漫画]]>';
                 $item_data[$key]['description'] = "こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。".$manga_item['author']."～「".$manga_item['title']."」をお楽しみください。";
                 $item_data[$key]['pubDate'] = nad_jp_date();
                 $item_data[$key]['modifiedDate'] = null;
@@ -69,11 +78,13 @@ class Batch extends CI_Controller {
             for($manga_counter = 0; $manga_counter<count($item_data);$manga_counter++){
 
                 $manga_img_url_col = $this->Manga_model->select_manga_media($item_data[$manga_counter]['guid']);
-                $item_data[$manga_counter]['encoded'] = htmlspecialchars('<![CDATA[<h2>').$item_data[$manga_counter]['title'].htmlspecialchars('</h2>');
+                // $item_data[$manga_counter]['encoded'] = htmlspecialchars('<![CDATA[<h2>').$item_data[$manga_counter]['title'].htmlspecialchars('</h2>');
+                $item_data[$manga_counter]['encoded'] = '<![CDATA[<h2>'.$item_data[$manga_counter]['title'].'</h2>';
                 foreach($manga_img_url_col as $manga_img){
-                    $item_data[$manga_counter]['encoded'] .= htmlspecialchars('<img src="').$manga_img['img_url'].htmlspecialchars('"/>');
+                    // $item_data[$manga_counter]['encoded'] .= htmlspecialchars('<img src="').$manga_img['img_url'].htmlspecialchars('"/>');
+                    $item_data[$manga_counter]['encoded'] .= '<img src="'.$manga_img['img_url'].'"/>';
                 }
-                $item_data[$manga_counter]['encoded'] .= htmlspecialchars(']]>');
+                $item_data[$manga_counter]['encoded'] .= ']]>';
 
             }
 
@@ -175,43 +186,69 @@ class Batch extends CI_Controller {
 
                     foreach($each_item as $each_item_manga){
                       
-                        $item_data[$manga_counter]['relatedlink'] .= htmlspecialchars('<relatedlink title="').$each_item_manga['manga_title'].htmlspecialchars('" link="').$each_item_manga['manga_url'].htmlspecialchars('" thumbnail="').$item_data[$manga_counter]['thumbnail'].htmlspecialchars('"/>');
+                        // $item_data[$manga_counter]['relatedlink'] .= htmlspecialchars('<relatedlink title="').$each_item_manga['manga_title'].htmlspecialchars('" link="').$each_item_manga['manga_url'].htmlspecialchars('" thumbnail="').$item_data[$manga_counter]['thumbnail'].htmlspecialchars('"/>');
+                        $item_data[$manga_counter]['relatedlink'] .= '<relatedlink title="'.$each_item_manga['manga_title'].'" link="'.$each_item_manga['manga_url'].'" thumbnail="'.$item_data[$manga_counter]['thumbnail'].'"/>';
                     }
                   
                 }
             }
             
             // Preparing RSS-XML
-            $xml=htmlspecialchars('<?xml version="1.0" encoding="UTF-8" ?>');
-            $xml.=htmlspecialchars('<channel>');
-            $xml.=htmlspecialchars('<title>'.$channel_data['title'].'</title>');
-            $xml.=htmlspecialchars('<link>'.$channel_data['link'].'</link>');
-            $xml.=htmlspecialchars('<description>'.$channel_data['description'].'</description>');
-            $xml.=htmlspecialchars('<pubDate>'.$channel_data['pubDate'].'</pubDate>');
-            $xml.=htmlspecialchars('<language>'.$channel_data['language'].'</language>');
-            $xml.=htmlspecialchars('<copyright>'.$channel_data['copyright'].'</copyright>');
+            $xml='<?xml version="1.0" encoding="UTF-8" ?>';
+            //$xml.=htmlspecialchars('<channel>');
+            //$xml.=htmlspecialchars('<title>'.$channel_data['title'].'</title>');
+            //$xml.=htmlspecialchars('<link>'.$channel_data['link'].'</link>');
+            //$xml.=htmlspecialchars('<description>'.$channel_data['description'].'</description>');
+            //$xml.=htmlspecialchars('<pubDate>'.$channel_data['pubDate'].'</pubDate>');
+            //$xml.=htmlspecialchars('<language>'.$channel_data['language'].'</language>');
+            //$xml.=htmlspecialchars('<copyright>'.$channel_data['copyright'].'</copyright>');
+            //foreach($item_data as $item)
+            // {
+            //   $xml.=htmlspecialchars('<item>');
+            //     $xml.=htmlspecialchars('<title>'.$item['title'].'</title>');
+            //     $xml.=htmlspecialchars('<link>'.$item['link'].'</link>');
+            //     $xml.=htmlspecialchars('<guid>'.$item['guid'].'</guid>');
+            //     $xml.=htmlspecialchars('<category>').$item['category'].htmlspecialchars('</category>');
+            //     $xml.=htmlspecialchars('<description>'.$item['description'] .'</description>');
+            //     $xml.=htmlspecialchars('<pubDate>'.$item['pubDate'] .'</pubDate>');
+            //     $xml.=htmlspecialchars('<modifiedDate>'.$item['modifiedDate'] .'</modifiedDate>');
+            //     $xml.=htmlspecialchars('<encoded>').$item['encoded'] .htmlspecialchars('</encoded>');
+            //     $xml.=htmlspecialchars('<delete>'.$item['delete'] .'</delete>');
+            //     $xml.=htmlspecialchars('<enclosure url="'.$item['enclosure'] .'"/>');
+            //     $xml.=htmlspecialchars('<thumbnail url="'.$item['thumbnail'] .'"/>');
+            //     $xml.=$item['relatedlink'];
+            //   $xml.=htmlspecialchars('</item>');
+            // }
+            // $xml.=htmlspecialchars('</channel>');
+            // $channel_data['RSS-XML'] = $xml;
+            ///
+            $xml.='<channel>';
+            $xml.='<title>'.$channel_data['title'].'</title>';
+            $xml.='<link>'.$channel_data['link'].'</link>';
+            $xml.='<description>'.$channel_data['description'].'</description>';
+            $xml.='<pubDate>'.$channel_data['pubDate'].'</pubDate>';
+            $xml.='<language>'.$channel_data['language'].'</language>';
+            $xml.='<copyright>'.$channel_data['copyright'].'</copyright>';
             foreach($item_data as $item)
             {
-              $xml.=htmlspecialchars('<item>');
-                $xml.=htmlspecialchars('<title>'.$item['title'].'</title>');
-                $xml.=htmlspecialchars('<link>'.$item['link'].'</link>');
-                $xml.=htmlspecialchars('<guid>'.$item['guid'].'</guid>');
-                $xml.=htmlspecialchars('<category>').$item['category'].htmlspecialchars('</category>');
-                $xml.=htmlspecialchars('<description>'.$item['description'] .'</description>');
-                $xml.=htmlspecialchars('<pubDate>'.$item['pubDate'] .'</pubDate>');
-                $xml.=htmlspecialchars('<modifiedDate>'.$item['modifiedDate'] .'</modifiedDate>');
-                $xml.=htmlspecialchars('<encoded>').$item['encoded'] .htmlspecialchars('</encoded>');
-                $xml.=htmlspecialchars('<delete>'.$item['delete'] .'</delete>');
-                $xml.=htmlspecialchars('<enclosure>'.$item['enclosure'] .'</enclosure>');
-                $xml.=htmlspecialchars('<thumbnail>'.$item['thumbnail'] .'</thumbnail>');
-                $xml.=htmlspecialchars('<related>'.$item['relatedlink'] .'</related>');
-              $xml.=htmlspecialchars('</item>');
+              $xml.='<item>';
+                $xml.='<title>'.$item['title'].'</title>';
+                $xml.='<link>'.$item['link'].'</link>';
+                $xml.='<guid>'.$item['guid'].'</guid>';
+                $xml.='<category>'.$item['category'].'</category>';
+                $xml.='<description>'.$item['description'] .'</description>';
+                $xml.='<pubDate>'.$item['pubDate'] .'</pubDate>';
+                $xml.='<modifiedDate>'.$item['modifiedDate'] .'</modifiedDate>';
+                $xml.='<encoded>'.$item['encoded'] .'</encoded>';
+                $xml.='<delete>'.$item['delete'] .'</delete>';
+                $xml.='<enclosure url="'.$item['enclosure'] .'"/>';
+                $xml.='<thumbnail url="'.$item['thumbnail'] .'"/>';
+                $xml.=$item['relatedlink'];
+              $xml.='</item>';
             }
-            $xml.=htmlspecialchars('</channel>');
-            $channel_data['RSS-XML'] = $xml;
+            $xml.='</channel>';
+            $channel_data['RSS_XML'] = $xml;
 
-            var_dump($channel_data);
-            var_dump($item_data);die();
         return [
             'channel_data' => $channel_data,
             'item_data' => $item_data
