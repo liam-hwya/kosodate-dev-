@@ -84,7 +84,9 @@
                 $this->db->select('D_MANGA.manga_id');
                 $this->db->select('D_MANGA.manga_title');
                 $this->db->select('D_MANGA.manga_url');
+                $this->db->select('D_MEDIA_1.media_url AS img_url');
                 $this->db->from('D_MANGA');
+                $this->db->join('D_MEDIA AS D_MEDIA_1','D_MANGA.manga_icon_media_id = D_MEDIA_1.media_id','left');
                 $this->db->join('D_TAGS_MANGA','D_MANGA.manga_id = D_TAGS_MANGA.manga_id','left');
                 $this->db->join('D_TAGS','D_TAGS_MANGA.tags_id = D_TAGS.tags_id','left');
                 $this->db->where('D_TAGS.tags_id',$condition['tags_id']);

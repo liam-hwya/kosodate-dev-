@@ -84,12 +84,16 @@ defined('EXIT_DATABASE')       OR define('EXIT_DATABASE', 8); // database error
 defined('EXIT__AUTO_MIN')      OR define('EXIT__AUTO_MIN', 9); // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX')      OR define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
 
+// These CONSTANTS are already included in t-server
 define('NO_DELETE_FLAG', 0);
 define('CONST_MANGA_STATE_CODE_PUBLIC', 1);
 define('CONST_MANGAKA_STATE_CODE_SHOW', 1);
 define('CONST_COMMON_STATE_CODE_VALID', 1);
 define('CONST_RSS_MANGA_ITEM_NUM', 30);
+define('KOSODATE_URL','https://www.kosodatedays.com/');
+define('MANGA_URL','https://www.kosodatedays.com/manga/');
 
+// These CONSTANTS are defined in here.
 define('ONE_YEAR_OLD_TAG_AGE_NAME','1歳');
 define('TWO_YEAR_OLD_TAG_AGE_NAME','2歳');
 define('THREE_YEAR_OLD_TAG_AGE_NAME','3歳');
@@ -103,3 +107,11 @@ define('THREE_YEAR_OLD_TAG_AGE',3);
 define('FOUR_YEAR_OLD_TAG_AGE',4);
 define('FIVE_YEAR_OLD_TAG_AGE',5);
 define('SIX_YEAR_OLD_TAG_AGE',6);
+
+define('MANGA_LIMITATION_ONE',1);
+define('MANGA_LIMITATION_TWO',2);
+define('MANGA_LIMITATION_THREE',3);
+
+define('ONE_CASE_FOR_AGE',1);
+define('TWO_CASE_FOR_AGE',2);
+define('THREE_CASE_FOR_AGE',3);

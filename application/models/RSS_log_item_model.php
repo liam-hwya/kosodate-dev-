@@ -23,6 +23,22 @@
         return $this->db->get('RSS_lOG_ITEM')->result_array();
     }
 
+    public function select_modified_date($channel_id) {
+
+        // select t.username, t.date, t.value
+        // from MyTable t
+        // inner join (
+        //     select username, max(date) as MaxDate
+        //     from MyTable
+        //     group by username
+        // ) tm on t.username = tm.username and t.date = tm.MaxDate
+
+        $this->db->select('modifiedDate');
+        $this->db->from('RSS_LOG_ITEM item');
+        $this->db->where('log_channel_id',$channel_id);
+        
+        return $this->db->get()->result_array();
+    }
 
     
  }
