@@ -30,6 +30,16 @@
         return $this->db->get()->row();
     }
 
+    public function select_modified_date($channel_id) {
+
+        $this->db->select('UPDATE_DATETIME2');
+        $this->db->from('RSS_LOG_CHANNEL');
+        $this->db->where('logid',$channel_id);
+
+        return $this->db->get()->row();
+
+    }
+
     
  }
 

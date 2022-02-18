@@ -25,10 +25,8 @@
         $this->db->join('D_TAGS','D_TAGS_MANGA.tags_id = D_TAGS.tags_id','left');
         $this->db->where('D_MANGA.manga_deleted',NO_DELETE_FLAG);
         $this->db->where('D_MANGA.manga_state_code',CONST_MANGA_STATE_CODE_PUBLIC);
-        // $this->db->where('D_MANGA.manga_date >=',nad_jp_date());
-        // $this->db->where('D_MANGA.manga_date <=',nad_jp_date('','',$end_date=true));
-        $this->db->where('D_MANGA.manga_date >=','2020-08-01 0:00:00');
-        $this->db->where('D_MANGA.manga_date <=','2020-08-31 23:59:59');
+        $this->db->where('D_MANGA.manga_date >=',nad_jp_date());
+        $this->db->where('D_MANGA.manga_date <=',nad_jp_date('','',$end_date=true));
         $this->db->where('D_MANGAKA.mangaka_state_code',CONST_MANGAKA_STATE_CODE_SHOW);
         $this->db->where_in('D_TAGS_MANGA.tags_id',$tags_id);
         $this->db->group_by('D_TAGS_MANGA.tags_id');
@@ -80,7 +78,10 @@
     public function select_related_manga_for_tags($tags_condition) {
 
         if($tags_condition){
+
+            $manga_result = array();
             foreach($tags_condition as $condition){
+                // var_dump($condition);
                 $this->db->select('D_MANGA.manga_id');
                 $this->db->select('D_MANGA.manga_title');
                 $this->db->select('D_MANGA.manga_url');
@@ -94,11 +95,32 @@
                 $this->db->order_by('D_MANGA.manga_date','DESC');
                 $this->db->limit($condition['manga_limit']);
 
-                $result[$condition['manga_id']] = $this->db->get()->result_array();
+                $result[] = $this->db->get()->result_array();
+
             }
         }
+        // var_dump($result);
 
-        return $result;
+
+        foreach($result as $row){
+          
+            if(count($row) != count($row,COUNT_RECURSIVE)) {
+
+                foreach($row as $nested_row){
+
+                    $manga_result[] = $nested_row;
+                  
+                }
+            }else{
+
+                $manga_result[] = $row;
+
+            }
+
+            
+        }
+
+        return $manga_result;
 
     }
 

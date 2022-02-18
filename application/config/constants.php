@@ -90,7 +90,7 @@ define('CONST_MANGA_STATE_CODE_PUBLIC', 1);
 define('CONST_MANGAKA_STATE_CODE_SHOW', 1);
 define('CONST_COMMON_STATE_CODE_VALID', 1);
 define('CONST_RSS_MANGA_ITEM_NUM', 30);
-define('KOSODATE_URL','https://www.kosodatedays.com/');
+define('KOSODATE_IMG_URL','https://t-img001.kosodatedays.com/');
 define('MANGA_URL','https://www.kosodatedays.com/manga/');
 
 // These CONSTANTS are defined in here.
