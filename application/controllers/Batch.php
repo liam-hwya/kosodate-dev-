@@ -28,7 +28,7 @@ class Batch extends CI_Controller {
 
     public function insertRSS()
     {
-
+        echo "<pre>";
         $rss_data = $this->prepareRSS();
 
         if($rss_data == null){
@@ -52,7 +52,7 @@ class Batch extends CI_Controller {
     public function prepareRSS()
     {   
         $d_manga_col = $this->Manga_model->select_manga_for_rss();
-            
+        
         if(count($d_manga_col) == 0){
           
             return null;
@@ -66,7 +66,7 @@ class Batch extends CI_Controller {
             $channel_data['language'] = "ja";
             $channel_data['copyright'] = "©2017 EvolvedInfo. All Rights Reserved.";
 
-            //For skipping the same manga
+            //For skipping the same manga id
             $uniq_manga_id = 0;
 
             // Preparing XML item data
@@ -77,14 +77,14 @@ class Batch extends CI_Controller {
                     $item_data[$key]['guid'] = $manga_item['id'];
                     $item_data[$key]['category'] = '<![CDATA[ママコマ漫画]]>';
                     $item_data[$key]['description'] = "こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。".$manga_item['author']."～「".$manga_item['title']."」をお楽しみください。";
-                    $item_data[$key]['pubDate'] = nad_jp_date();
+                    $item_data[$key]['pubDate'] = nad_jp_date('',$format='RFC822');
                     $item_data[$key]['modifiedDate'] = null;
                     $item_data[$key]['delete'] = $manga_item['manga_deleted'];
                     $item_data[$key]['enclosure'] = KOSODATE_IMG_URL.$manga_item['img_url'];
                     $item_data[$key]['thumbnail'] = KOSODATE_IMG_URL.$manga_item['img_url'];
                     $item_data[$key]['encoded'] = null;
                     $item_data[$key]['relatedlink'] = null;
-
+                    $item_data[$key]['author'] = $manga_item['author'];
                     $uniq_manga_id = $manga_item['id'];
                 }
                 else{
@@ -97,13 +97,13 @@ class Batch extends CI_Controller {
             foreach($item_data as $key=>$item){
             
                 $manga_img_url_col = $this->Manga_model->select_manga_media($item['guid']);
-                $item_data[$key]['encoded'] = '<![CDATA[<h2>'.$item_data[$key]['title'].'</h2>';
+                $item_data[$key]['encoded'] = '<![CDATA[<div><p>'.$item_data[$key]['author'].'</p><p></p></div><div><p>'.date('Y.m.d',strtotime($item_data[$key]['pubDate'])).'</p></div><h2>'.$item_data[$key]['title'].'</h2>';
                 foreach($manga_img_url_col as $manga_img){
                     $item_data[$key]['encoded'] .= '<img src="'.KOSODATE_IMG_URL.$manga_img['img_url'].'"/>';
                 }
                 $item_data[$key]['encoded'] .= ']]>';
             }
-
+            
             // Select all related manga for manga's tag 
             foreach($d_manga_col as $key=>$item){
                 // $manga_id_tags[$key]['manga__id'] = $item['id'];
@@ -202,22 +202,25 @@ class Batch extends CI_Controller {
                         ]
                     ];
                 }
-
+                
                 unset($tags); //Clear for another manga
 
                 $related_manga_tags_col = $this->Manga_model->select_related_manga_for_tags($tags_condition); //Manga collection of the related tag
-            
+                
                 $item_by_manga_id[$manga_id] = $this->search_item_by_manga_id($item_data,['guid'=>$manga_id]); //Create new item data by related manga id 
                 
                 // Adding Related Link data
-                foreach($related_manga_tags_col as $key=>$related_manga) {
+                foreach($related_manga_tags_col as $related_manga) {
 
-                    $item_by_manga_id[$manga_id]['relatedlink'] .= '<relatedlink title="'.$related_manga['manga_title'].'" link="'.MANGA_URL.$related_manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$item_by_manga_id[$manga_id]['thumbnail'].'"/>';
+                    $item_by_manga_id[$manga_id]['relatedlink'] .= '<relatedlink title="'.$related_manga['manga_title'].'" link="'.MANGA_URL.$related_manga['manga_id'].'" thumbnail="'.$item_by_manga_id[$manga_id]['thumbnail'].'"/>';
+
+                    //Remove unnecessary data
+                    unset($item_by_manga_id[$manga_id]['author']);
                 
                 }
 
             } 
-        
+
             // Preparing RSS-XML
             $xml='<?xml version="1.0" encoding="UTF-8" ?>';
             $xml.='<channel>';
@@ -246,10 +249,9 @@ class Batch extends CI_Controller {
             }
             $xml.='</channel>';
             $channel_data['RSS_XML'] = $xml;
-
             return [
                 'channel_data' => $channel_data,
-                'item_data' => $item_data
+                'item_data' => $item_by_manga_id
             ];
 
         }      
@@ -261,18 +263,13 @@ class Batch extends CI_Controller {
         $result = [];
 
         foreach($item_data as $item) {
-
             foreach($manga_id as $key=>$val) {
-
                 if(!isset($item[$key]) || $item[$key] != $val) {
                     continue 2;
                 }
             }
-
             $result[] = $item;
         }
-
-        echo "<h1>Manga item search by id</h1>"; var_dump($result);
 
         return $result[0]; // Return the only one manga which is matched for passing manga id
     }

@@ -22,7 +22,11 @@ if (!function_exists('nad_jp_date')) {
         if($end_date) {
             return $t->format('Y-m-t 23:59:59');
         }else{
-            return $t->format($format);
+            if($format == 'RFC822'){
+                return gmdate(DATE_RFC822);
+            }else{
+                return $t->format($format);
+            }
         }
         
     }
