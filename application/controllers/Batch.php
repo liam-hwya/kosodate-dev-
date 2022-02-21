@@ -42,7 +42,7 @@ class Batch extends CI_Controller {
             if($this->RSS_log_item_model->create_rss($rss_data['item_data'],$channel_id[0])){
 
                 echo "Inserted successfully<br>";
-                echo "See the feed <a href='http://localhost:8080/kosodate-dev/rss-mamatena'>http://localhost:8080/kosodate-dev/rss-mamatena</a>";
+                echo "See the feed <a href='http://localhost:8888/kosodate(local)/rss-mamatena'>http://localhost:8080/kosodate-dev/rss-mamatena</a>";
             };
 
         }
@@ -58,7 +58,6 @@ class Batch extends CI_Controller {
             return null;
 
         }else{
-
             // Preparing XML  Channel data
             $channel_data['title'] = "こそだてDAYS";
             $channel_data['link'] = "https://www.kosodatedays.com/";
@@ -111,90 +110,101 @@ class Batch extends CI_Controller {
                 $manga_id_tags[$item['id']][$key]['manga_tags_id'] = $item['tags_id'];
                 $manga_id_tags[$item['id']][$key]['manga_tags_name'] = $item['tags_name'];
             }
-
+            
             foreach($manga_id_tags as $manga_id=>$manga_item){
           
-                foreach($manga_item as $manga){
-            
+                foreach($manga_item as $key=>$manga){
+
                     switch ($manga['manga_tags_name']){
                 
-                      case ONE_YEAR_OLD_TAG_AGE_NAME:
-                        $tags_names[] = ONE_YEAR_OLD_TAG_AGE;
-                        break;
-                      case TWO_YEAR_OLD_TAG_AGE_NAME:
-                        $tags_names[] = TWO_YEAR_OLD_TAG_AGE;
-                        break;
-                      case THREE_YEAR_OLD_TAG_AGE_NAME:
-                        $tags_names[] = THREE_YEAR_OLD_TAG_AGE;
-                        break;
-                      case FOUR_YEAR_OLD_TAG_AGE_NAME:
-                        $tags_names[] = FOUR_YEAR_OLD_TAG_AGE;
-                        break;
-                      case FIVE_YEAR_OLD_TAG_AGE_NAME:
-                        $tags_names[] = FIVE_YEAR_OLD_TAG_AGE;
-                        break;
-                      case SIX_YEAR_OLD_TAG_AGE_NAME:
-                        $tags_names[] = SIX_YEAR_OLD_TAG_AGE;
-                        break;
-                      default:
-                        $tags_names[] = null;
-                        break;
-                
-                    }
+                        case ONE_YEAR_OLD_TAG_AGE_NAME:
+                            $tags[$key]['id'] = $manga['manga_tags_id'];  
+                            $tags[$key]['name'] = ONE_YEAR_OLD_TAG_AGE;
+                            break;
+                        case TWO_YEAR_OLD_TAG_AGE_NAME:
+                            $tags[$key]['id'] = $manga['manga_tags_id'];
+                            $tags[$key]['name'] = TWO_YEAR_OLD_TAG_AGE;
+                            break;
+                        case THREE_YEAR_OLD_TAG_AGE_NAME:
+                            $tags[$key]['id'] = $manga['manga_tags_id'];
+                            $tags[$key]['name'] = THREE_YEAR_OLD_TAG_AGE;
+                            break;
+                        case FOUR_YEAR_OLD_TAG_AGE_NAME:
+                            $tags[$key]['id'] = $manga['manga_tags_id'];
+                            $tags[$key]['name'] = FOUR_YEAR_OLD_TAG_AGE;
+                            break;
+                        case FIVE_YEAR_OLD_TAG_AGE_NAME:
+                            $tags[$key]['id'] = $manga['manga_tags_id'];
+                            $tags[$key]['name'] = FIVE_YEAR_OLD_TAG_AGE;
+                            break;
+                        case SIX_YEAR_OLD_TAG_AGE_NAME:
+                            $tags[$key]['id'] = $manga['manga_tags_id'];
+                            $tags[$key]['name'] = SIX_YEAR_OLD_TAG_AGE;
+                            break;
+                        default:
+                            $tags[] = null;
+                            break;
+                  
+                      }
+            
+                    // $tags_id[] = $manga['manga_tags_id'];
                 }
-                
-                asort($tags_names); // sorting ages from smallest to biggest
 
-                if(count($tags_names) == ONE_CASE_FOR_AGE){ // Checkpoint for deciding manga limit
+                // Sort the age order
+                usort($tags,function($original,$sorted){
+                    return $original['name'] > $sorted['name'];
+                });
+
+                if(count($tags) == ONE_CASE_FOR_AGE){ // Checkpoint for deciding manga limit
 
                     $tags_condition = [
                         [
                             'manga_id' => $manga_id,
-                            'tags_id' => $tags_names[0],
+                            'tags_id' => $tags[0]['id'],
                             'manga_limit' => MANGA_LIMITATION_THREE
                         ]
                     ];
                 }
 
-                if(count($tags_names) == TWO_CASE_FOR_AGE){
+                if(count($tags) == TWO_CASE_FOR_AGE){
 
                     $tags_condition = [
                         [
                             'manga_id' => $manga_id,
-                            'tags_id' => $tags_names[0],
+                            'tags_id' => $tags[0]['id'],
                             'manga_limit' => MANGA_LIMITATION_TWO
                         ],
                         [
                             'manga_id' => $manga_id,
-                            'tags_id' => $tags_names[1],
+                            'tags_id' => $tags[1]['id'],
                             'manga_limit' => MANGA_LIMITATION_ONE
                         ]
                     ];
                 }
 
-                if(count($tags_names) >= THREE_CASE_FOR_AGE){
+                if(count($tags) >= THREE_CASE_FOR_AGE){
 
                     $tags_condition = [
                         [
                             'manga_id' => $manga_id,
-                            'tags_id' => $tags_names[0],
+                            'tags_id' => $tags[0]['id'],
                             'manga_limit' => MANGA_LIMITATION_ONE
                         ],
                         [
                             'manga_id' => $manga_id,
-                            'tags_id' => $tags_names[1],
+                            'tags_id' => $tags[1]['id'],
                             'manga_limit' => MANGA_LIMITATION_ONE
                         ],
                         [
                             'manga_id' => $manga_id,
-                            'tags_id' => $tags_names[2],
+                            'tags_id' => $tags[2]['id'],
                             'manga_limit' => MANGA_LIMITATION_ONE
                         ]
                     ];
                 }
 
-                unset($tags_names); //Clear for another manga
-                
+                unset($tags); //Clear for another manga
+
                 $related_manga_tags_col = $this->Manga_model->select_related_manga_for_tags($tags_condition); //Manga collection of the related tag
             
                 $item_by_manga_id[$manga_id] = $this->search_item_by_manga_id($item_data,['guid'=>$manga_id]); //Create new item data by related manga id 

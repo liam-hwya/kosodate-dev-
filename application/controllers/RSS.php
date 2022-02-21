@@ -31,21 +31,7 @@ class RSS extends CI_Controller
         $latest_channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
         $latest_date = $this->RSS_log_channel_model->select_modified_date($latest_channel_id->logid);
 
-        $latest_date = strtotime($latest_date->UPDATE_DATETIME2);
-        // $latest_date = 0;
-        // foreach($modified_date as $date){
-
-        //     //filter date
-        //     if($date['modifiedDate'] != null) {
-
-        //         $cur_date = strtotime($date['modifiedDate']);
-
-        //         if($cur_date > $latest_date){
-        //             $latest_date = $cur_date;
-        //         }
-        //     }
-            
-        // }
+        $latest_date = strtotime($latest_date->last_time2);
 
         $this->output->set_header('Last-Modified: '.$latest_date);
         if(isset($this->input->request_headers()['If-Modified-Since'])) {
@@ -57,7 +43,7 @@ class RSS extends CI_Controller
         }
 
         http_response_code(200);
-        // echo "<pre>";var_dump($rss_channel_data->RSS_XML);echo "</pre>";die();
+        
         $this->output->set_header('X-CONTENT-RETURN: YES');
         $this->output->set_header('Content-Type: text/xml');
         $this->load->view('rss',$data);
