@@ -85,6 +85,10 @@ class Batch extends CI_Controller {
                     $item_data[$key]['encoded'] = null;
                     $item_data[$key]['relatedlink'] = null;
                     $item_data[$key]['author'] = $manga_item['author'];
+                    $item_data[$key]['story_name'] = $manga_item['story_name'];
+                    $item_data[$key]['story_mama_year_old'] = $manga_item['story_mama_year_old'];
+                    $item_data[$key]['story_childs_year_old'] = $manga_item['story_childs_year_old'];
+                    $item_data[$key]['intro'] = $manga_item['intro'];
                     $uniq_manga_id = $manga_item['id'];
                 }
                 else{
@@ -97,11 +101,26 @@ class Batch extends CI_Controller {
             foreach($item_data as $key=>$item){
             
                 $manga_img_url_col = $this->Manga_model->select_manga_media($item['guid']);
-                $item_data[$key]['encoded'] = '<![CDATA[<div><p>'.$item_data[$key]['author'].'</p><p></p></div><div><p>'.date('Y.m.d',strtotime($item_data[$key]['pubDate'])).'</p></div><h2>'.$item_data[$key]['title'].'</h2>';
-                foreach($manga_img_url_col as $manga_img){
-                    $item_data[$key]['encoded'] .= '<img src="'.KOSODATE_IMG_URL.$manga_img['img_url'].'"/>';
+
+                $item_data[$key]['encoded'] = '<![CDATA[<dl><dt><span>体験談投稿</span></dt><dd><div><p>'.$item_data[$key]['story_name'].'</p>';
+
+                if(!empty($item_data[$key]['story_mama_year_old'])){
+                    $item_data[$key]['encoded'] .= '<p>'.$item_data[$key]['story_mama_year_old'].'</p>';
                 }
-                $item_data[$key]['encoded'] .= ']]>';
+                $item_data[$key]['encoded'] .= '</div></dd></dl>';
+
+                if(!empty($item_data[$key]['story_childs_year_old'])){
+                    $item_data[$key]['encoded'] .= '<dl><dt><span>お子さん</span></dt><dd><div>'.$item_data[$key]['story_childs_year_old'].'</div></dd></dl>';
+                }
+
+                $item_data[$key]['encoded'] .= '<div>'.$item_data[$key]['title'].'</div>';          
+                $item_data[$key]['encoded'] .= '<div>'.$item_data[$key]['intro'].'</div>';
+                $item_data[$key]['encoded'] .= '<div>'.date('Y.m.d',strtotime($item_data[$key]['pubDate'])).'</div>';
+                
+                foreach($manga_img_url_col as $manga_img){
+                    $item_data[$key]['encoded'] .= '<p><img src="'.KOSODATE_IMG_URL.$manga_img['img_url'].'"/>';
+                }
+                $item_data[$key]['encoded'] .= '</p>]]>';
             }
             
             // Select all related manga for manga's tag 
@@ -206,16 +225,20 @@ class Batch extends CI_Controller {
                 unset($tags); //Clear for another manga
 
                 $related_manga_tags_col = $this->Manga_model->select_related_manga_for_tags($tags_condition); //Manga collection of the related tag
-                
+
                 $item_by_manga_id[$manga_id] = $this->search_item_by_manga_id($item_data,['guid'=>$manga_id]); //Create new item data by related manga id 
                 
                 // Adding Related Link data
                 foreach($related_manga_tags_col as $related_manga) {
 
-                    $item_by_manga_id[$manga_id]['relatedlink'] .= '<relatedlink title="'.$related_manga['manga_title'].'" link="'.MANGA_URL.$related_manga['manga_id'].'" thumbnail="'.$item_by_manga_id[$manga_id]['thumbnail'].'"/>';
+                    $item_by_manga_id[$manga_id]['relatedlink'] .= '<relatedlink title="'.$related_manga['manga_title'].'" link="'.MANGA_URL.$related_manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$related_manga['img_url'].'"/>';
 
                     //Remove unnecessary data
                     unset($item_by_manga_id[$manga_id]['author']);
+                    unset($item_by_manga_id[$manga_id]['story_name']);
+                    unset($item_by_manga_id[$manga_id]['story_mama_year_old']);
+                    unset($item_by_manga_id[$manga_id]['story_childs_year_old']);
+                    unset($item_by_manga_id[$manga_id]['intro']);
                 
                 }
 
@@ -239,7 +262,7 @@ class Batch extends CI_Controller {
                 $xml.='<category>'.$item['category'].'</category>';
                 $xml.='<description>'.$item['description'] .'</description>';
                 $xml.='<pubDate>'.$item['pubDate'] .'</pubDate>';
-                $xml.='<modifiedDate>'.$item['modifiedDate'] .'</modifiedDate>';
+                $xml.='<modifiedDate>'.$item['modifiedDate'].'</modifiedDate>';
                 $xml.='<encoded>'.$item['encoded'] .'</encoded>';
                 $xml.='<delete>'.$item['delete'] .'</delete>';
                 $xml.='<enclosure url="'.$item['enclosure'] .'"/>';

@@ -13,6 +13,9 @@
         $this->db->select('D_MANGA.manga_url AS link');
         $this->db->select('D_MANGA.manga_intro AS intro');
         $this->db->select('D_MANGA.manga_date AS date');
+        $this->db->select('D_MANGA.story_name');
+        $this->db->select('D_MANGA.story_mama_year_old');
+        $this->db->select('D_MANGA.story_childs_year_old');
         $this->db->select('D_MEDIA_1.media_url AS img_url');
         $this->db->select('D_MANGA.manga_deleted');
         $this->db->select('D_MANGA.manga_state_code');
@@ -70,8 +73,7 @@
         
         $this->db->select('D_MEDIA_1.media_url AS img_url');
         $this->db->from('D_MANGA');
-        $this->db->join('D_MANGA_MEDIA','D_MANGA.manga_id = D_MANGA_MEDIA.manga_id','left');
-        $this->db->join('D_MEDIA AS D_MEDIA_1','D_MANGA_MEDIA.media_id = D_MEDIA_1.media_id','left');
+        $this->db->join('D_MEDIA AS D_MEDIA_1','D_MANGA.manga_icon_media_id = D_MEDIA_1.media_id','left');
         $this->db->where('D_MANGA.manga_id',$manga_id);
 
         return $this->db->get()->result_array();
@@ -84,7 +86,6 @@
                 // var_dump($condition);
                 $this->db->select('D_MANGA.manga_id');
                 $this->db->select('D_MANGA.manga_title');
-                $this->db->select('D_MANGA.manga_url');
                 $this->db->select('D_MEDIA_1.media_url AS img_url');
                 $this->db->select('D_TAGS.tags_id');
                 $this->db->from('D_MANGA');
