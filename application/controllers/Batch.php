@@ -102,20 +102,19 @@ class Batch extends CI_Controller {
             
                 $manga_img_url_col = $this->Manga_model->select_manga_media($item['guid']);
 
-                $item_data[$key]['encoded'] = '<![CDATA[<dl><dt><span>体験談投稿</span></dt><dd><div><p>'.$item_data[$key]['story_name'].'</p>';
+                $item_data[$key]['encoded'] = '<![CDATA[<p>体験談投稿</p><p>'.$item_data[$key]['story_name'].'</p>';
 
                 if(!empty($item_data[$key]['story_mama_year_old'])){
                     $item_data[$key]['encoded'] .= '<p>'.$item_data[$key]['story_mama_year_old'].'</p>';
                 }
-                $item_data[$key]['encoded'] .= '</div></dd></dl>';
 
                 if(!empty($item_data[$key]['story_childs_year_old'])){
-                    $item_data[$key]['encoded'] .= '<dl><dt><span>お子さん</span></dt><dd><div>'.$item_data[$key]['story_childs_year_old'].'</div></dd></dl>';
+                    $item_data[$key]['encoded'] .= '<p>お子さん</p><p>'.$item_data[$key]['story_childs_year_old'].'</p>';
                 }
 
-                $item_data[$key]['encoded'] .= '<div>'.$item_data[$key]['title'].'</div>';          
-                $item_data[$key]['encoded'] .= '<div>'.$item_data[$key]['intro'].'</div>';
-                $item_data[$key]['encoded'] .= '<div>'.date('Y.m.d',strtotime($item_data[$key]['pubDate'])).'</div>';
+                $item_data[$key]['encoded'] .= '<p>'.$item_data[$key]['title'].'</p>';          
+                $item_data[$key]['encoded'] .= '<p>'.$item_data[$key]['intro'].'</p>';
+                $item_data[$key]['encoded'] .= '<p>'.date('Y.m.d',strtotime($item_data[$key]['pubDate'])).'</p>';
                 
                 foreach($manga_img_url_col as $manga_img){
                     $item_data[$key]['encoded'] .= '<p><img src="'.KOSODATE_IMG_URL.$manga_img['img_url'].'"/>';
