@@ -29,7 +29,7 @@ class RSS extends CI_Controller
 
 
         $latest_channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
-        $latest_date = $this->RSS_log_channel_model->select_modified_date($latest_channel_id->logid);
+        $latest_date = $this->RSS_log_channel_model->select_modified_date($latest_channel_id);
 
         $latest_date = strtotime($latest_date->last_time2);
 

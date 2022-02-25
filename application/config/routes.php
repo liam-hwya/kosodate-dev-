@@ -55,3 +55,5 @@ $route['translate_uri_dashes'] = FALSE;
 
 $route['batch/insertRSS'] = "batch/insertRSS";
 $route['rss-mamatena'] = 'RSS/feed';
+$route['admin/ad_instagram'] = 'Ad_instagram/index';
+$route['admin/ad_instagram/register'] = 'Ad_instagram/register';

@@ -77,7 +77,7 @@ class Batch extends CI_Controller {
                     $item_data[$key]['guid'] = $manga_item['id'];
                     $item_data[$key]['category'] = '<![CDATA[ママコマ漫画]]>';
                     $item_data[$key]['description'] = "こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。".$manga_item['author']."～「".$manga_item['title']."」をお楽しみください。";
-                    $item_data[$key]['pubDate'] = nad_jp_date('',$format='RFC822');
+                    $item_data[$key]['pubDate'] = nad_jp_date();
                     $item_data[$key]['modifiedDate'] = null;
                     $item_data[$key]['delete'] = $manga_item['manga_deleted'];
                     $item_data[$key]['enclosure'] = KOSODATE_IMG_URL.$manga_item['img_url'];
@@ -249,7 +249,7 @@ class Batch extends CI_Controller {
             $xml.='<title>'.$channel_data['title'].'</title>';
             $xml.='<link>'.$channel_data['link'].'</link>';
             $xml.='<description>'.$channel_data['description'].'</description>';
-            $xml.='<pubDate>'.$channel_data['pubDate'].'</pubDate>';
+            $xml.='<pubDate>'.nad_jp_date($channel_data['pubDate'],$format='RFC822').'</pubDate>';
             $xml.='<language>'.$channel_data['language'].'</language>';
             $xml.='<copyright>'.$channel_data['copyright'].'</copyright>';
             foreach($item_by_manga_id as $item)
@@ -260,8 +260,8 @@ class Batch extends CI_Controller {
                 $xml.='<guid>'.$item['guid'].'</guid>';
                 $xml.='<category>'.$item['category'].'</category>';
                 $xml.='<description>'.$item['description'] .'</description>';
-                $xml.='<pubDate>'.$item['pubDate'] .'</pubDate>';
-                $xml.='<modifiedDate>'.$item['modifiedDate'].'</modifiedDate>';
+                $xml.='<pubDate>'.nad_jp_date($item['pubDate'],$format='RFC822').'</pubDate>';
+                $xml.='<modifiedDate>'.nad_jp_date($item['modifiedDate'],$format='RFC822').'</modifiedDate>';
                 $xml.='<encoded>'.$item['encoded'] .'</encoded>';
                 $xml.='<delete>'.$item['delete'] .'</delete>';
                 $xml.='<enclosure url="'.$item['enclosure'] .'"/>';
