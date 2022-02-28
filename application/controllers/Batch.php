@@ -19,6 +19,7 @@ class Batch extends CI_Controller {
         $this->load->model('Manga_model','Manga_model');
         $this->load->model('RSS_log_channel_model','RSS_log_channel_model');
         $this->load->model('RSS_log_item_model','RSS_log_item_model');
+        $this->load->model('RSS_insta_model','RSS_insta_model');
     }
 
     public function index()
@@ -39,7 +40,7 @@ class Batch extends CI_Controller {
 
             $channel_id = $this->RSS_log_channel_model->create_rss($rss_data['channel_data']);
     
-            if($this->RSS_log_item_model->create_rss($rss_data['item_data'],$channel_id[0])){
+            if($this->RSS_log_item_model->create_rss($rss_data['item_data'],$channel_id)){
 
                 echo "Inserted successfully<br>";
                 echo "See the feed <a href='http://localhost:8888/kosodate(local)/rss-mamatena'>http://localhost:8080/kosodate-dev/rss-mamatena</a>";
@@ -97,6 +98,9 @@ class Batch extends CI_Controller {
             
             }
 
+            $insta = $this->RSS_insta_model->select_insta();
+            $insta_tag = (is_null($insta)? '': $insta->tag);
+            
             // Adding encoded data
             foreach($item_data as $key=>$item){
             
@@ -119,7 +123,10 @@ class Batch extends CI_Controller {
                 foreach($manga_img_url_col as $manga_img){
                     $item_data[$key]['encoded'] .= '<p><img src="'.KOSODATE_IMG_URL.$manga_img['img_url'].'"/>';
                 }
-                $item_data[$key]['encoded'] .= '</p>]]>';
+                $item_data[$key]['encoded'] .= '</p>';
+
+                $item_data[$key]['encoded'] .= $insta_tag."]]>";
+                
             }
             
             // Select all related manga for manga's tag 
@@ -295,6 +302,7 @@ class Batch extends CI_Controller {
 
         return $result[0]; // Return the only one manga which is matched for passing manga id
     }
+
     
 }
 

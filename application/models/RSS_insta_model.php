@@ -9,4 +9,14 @@
         return true;
 
     }
+
+    public function select_insta() {
+
+        $this->db->select('tag');
+        $this->db->from('RSS_INSTA');
+        $this->db->order_by('insta_id','DESC');
+        $this->db->limit(1);
+
+        return $this->db->get()->row();
+    }
  }

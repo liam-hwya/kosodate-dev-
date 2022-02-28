@@ -23,11 +23,16 @@ class RSS extends CI_Controller
     public function feed() {
 
         $rss_channel_data = $this->RSS_log_channel_model->select_latest_channel();
-        $data = [
-            'rss_output' => $rss_channel_data->RSS_XML
-        ];
 
-
+        if(is_null($rss_channel_data)){
+            echo "There is no data yet";
+            die();
+        }else{
+            $data = [
+                'rss_output' => $rss_channel_data->RSS_XML
+            ];
+        }
+        
         $latest_channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
         $latest_date = $this->RSS_log_channel_model->select_modified_date($latest_channel_id);
 
@@ -43,7 +48,6 @@ class RSS extends CI_Controller
         }
 
         http_response_code(200);
-        
         $this->output->set_header('X-CONTENT-RETURN: YES');
         $this->output->set_header('Content-Type: text/xml');
         $this->load->view('rss',$data);

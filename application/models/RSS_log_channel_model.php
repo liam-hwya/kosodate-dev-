@@ -27,9 +27,7 @@
         $this->db->order_by('logid','DESC');
         $this->db->limit(1);
 
-        $result = $this->db->get()->row();
-
-        return $result->logid;
+        return $this->db->get()->row()->logid;
     }
 
     public function select_modified_date($channel_id) {
