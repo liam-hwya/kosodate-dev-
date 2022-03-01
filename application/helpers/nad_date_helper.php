@@ -24,7 +24,8 @@ if (!function_exists('nad_jp_date')) {
         $t->setTimezone(new DateTimeZone($timezone));
         
         if($end_date) {
-            return $t->format('Y-m-t 23:59:59');
+            
+            return ($format)? $t->format('Y-m-t') : $t->format('Y-m-t 23:59:59');
         }else{
             if($format == 'RFC822'){
                 return gmdate(DATE_RFC822,$t->getTimestamp());

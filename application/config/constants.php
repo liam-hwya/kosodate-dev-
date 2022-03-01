@@ -117,3 +117,4 @@ define('TWO_CASE_FOR_AGE',2);
 define('THREE_CASE_FOR_AGE',3);
 
 define('INSTAGRAM_TAG_LOCATION_INDEX',-3);
+define('RSS_FEED_LINK','http://localhost:8080/kosodate-dev/rss-mamatena');

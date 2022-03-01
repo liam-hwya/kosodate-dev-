@@ -43,7 +43,7 @@ class Batch extends CI_Controller {
             if($this->RSS_log_item_model->create_rss($rss_data['item_data'],$channel_id)){
 
                 echo "Inserted successfully<br>";
-                echo "See the feed <a href='http://localhost:8888/kosodate(local)/rss-mamatena'>http://localhost:8080/kosodate-dev/rss-mamatena</a>";
+                echo "See the feed <a href=".RSS_FEED_LINK." >Here</a>";
             };
 
         }

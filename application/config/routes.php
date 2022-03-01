@@ -57,3 +57,8 @@ $route['batch/insertRSS'] = "batch/insertRSS";
 $route['rss-mamatena'] = 'RSS/feed';
 $route['admin/ad_instagram'] = 'Ad_instagram/index';
 $route['admin/ad_instagram/register'] = 'Ad_instagram/register';
+
+$route['admin/ad_modify_rss'] = 'Ad_modify_rss/index';
+$route['admin/ad_modify_rss/sign_up'] = 'Ad_modify_rss/sign_up';
+$route['admin/ad_modify_rss/modify'] = 'Ad_modify_rss/modify';
+$route['admin/ad_modify_rss/detail/(:num)'] = 'Ad_modify_rss/detail/$1';
