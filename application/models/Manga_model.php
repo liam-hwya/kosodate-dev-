@@ -2,7 +2,7 @@
 
  class Manga_model extends CI_MODEL {
 
-    public function select_manga_for_rss() {
+    public function select_manga($manga=FALSE) {
         
         $tags_id = $this->tags_id();
 
@@ -23,7 +23,7 @@
         $this->db->select('D_MANGAKA.mangaka_nickname AS author');
         $this->db->from('D_MANGA');
         $this->db->join('D_MANGAKA','D_MANGA.mangaka_id = D_MANGAKA.mangaka_id','left');
-        $this->db->join('D_MEDIA AS D_MEDIA_1','D_MANGA.manga_icon_media_id = D_MEDIA_1.media_id','left');
+        $this->db->join('D_MEDIA AS D_MEDIA_1','D_MANGA.manga_media_id = D_MEDIA_1.media_id','left');
         $this->db->join('D_TAGS_MANGA','D_MANGA.manga_id = D_TAGS_MANGA.manga_id','left');
         $this->db->join('D_TAGS','D_TAGS_MANGA.tags_id = D_TAGS.tags_id','left');
         $this->db->where('D_MANGA.manga_deleted',NO_DELETE_FLAG);
@@ -34,6 +34,9 @@
         $this->db->where('D_MANGA.manga_date <=','2020-07-31 23:59:59');
         $this->db->where('D_MANGAKA.mangaka_state_code',CONST_MANGAKA_STATE_CODE_SHOW);
         $this->db->where_in('D_TAGS_MANGA.tags_id',$tags_id);
+        if(!empty($manga)) {
+            $this->db->like('D_MANGA.manga_title',$manga);
+        } 
         $this->db->group_by('D_TAGS_MANGA.tags_id');
         $this->db->group_by('D_MANGA.manga_id');
         $this->db->order_by('D_TAGS_MANGA.tags_id','DESC');
@@ -42,6 +45,7 @@
 
         return $this->db->get()->result_array();
     }
+
 
     private function tags_id() {
 
@@ -73,7 +77,7 @@
         
         $this->db->select('D_MEDIA_1.media_url AS img_url');
         $this->db->from('D_MANGA');
-        $this->db->join('D_MEDIA AS D_MEDIA_1','D_MANGA.manga_icon_media_id = D_MEDIA_1.media_id','left');
+        $this->db->join('D_MEDIA AS D_MEDIA_1','D_MANGA.manga_media_id = D_MEDIA_1.media_id','left');
         $this->db->where('D_MANGA.manga_id',$manga_id);
 
         return $this->db->get()->result_array();
@@ -83,13 +87,13 @@
         if ($tags_condition) {
             $manga_result = [];
             foreach ($tags_condition as $condition) {
-                // var_dump($condition);
+                
                 $this->db->select('D_MANGA.manga_id');
                 $this->db->select('D_MANGA.manga_title');
                 $this->db->select('D_MEDIA_1.media_url AS img_url');
                 $this->db->select('D_TAGS.tags_id');
                 $this->db->from('D_MANGA');
-                $this->db->join('D_MEDIA AS D_MEDIA_1', 'D_MANGA.manga_icon_media_id = D_MEDIA_1.media_id', 'left');
+                $this->db->join('D_MEDIA AS D_MEDIA_1', 'D_MANGA.manga_media_id = D_MEDIA_1.media_id', 'left');
                 $this->db->join('D_TAGS_MANGA', 'D_MANGA.manga_id = D_TAGS_MANGA.manga_id', 'left');
                 $this->db->join('D_TAGS', 'D_TAGS_MANGA.tags_id = D_TAGS.tags_id', 'left');
                 $this->db->where('D_TAGS.tags_id', $condition['tags_id']);
@@ -152,7 +156,7 @@
                 $uniq_manga_id[] = $manga['manga_id'];
             }else{
                 $offset = $this->get_related_manga_limit($tags_condition,['tags_id' => $manga['tags_id']]);
-                // var_dump($uniq_manga_id);
+                
                 do {
                     $offset_add ++;
                     $another_manga = $this->select_related_manga_for_tags($condition = [
@@ -162,9 +166,9 @@
                                         'offset' => $offset+$offset_add
                                         ]
                                     ], $new_manga = true);
-                                    // var_dump(in_array($another_manga[0]['manga_id'],$uniq_manga_id)); die();
+                                    
                 }while(in_array($another_manga[0]['manga_id'],$uniq_manga_id));
-                // var_dump($another_manga);die();
+                
                 unset($manga_result[$key]);
                 $manga_result[$key] = $another_manga[0];
             }
@@ -188,6 +192,58 @@
         }
 
         return $result[0]['manga_limit']; // Return the only manga limit
+    }
+
+    public function search_manga($manga) {
+        
+        if(empty($manga)){
+            return NULL;
+        }
+
+        $this->db->like('manga_title',$manga);
+        $this->db->where('D_MANGA.manga_deleted',NO_DELETE_FLAG);
+        $this->db->where('D_MANGA.manga_state_code',CONST_MANGA_STATE_CODE_PUBLIC);
+        $sql = $this->db->get('d_manga');
+
+        return $sql->result_array();
+    }
+
+    public function select_manga_detail($manga_id) {
+
+        $this->db->select('*');
+        $this->db->from('d_manga');
+        $this->db->where('manga_id',$manga_id);
+
+        return $this->db->get()->row();
+    }
+
+    public function select_tags_for_manga($manga_id) {
+
+        $tags_id = $this->tags_id();
+
+        $this->db->select('D_TAGS_MANGA.tags_id');
+        $this->db->select('D_TAGS.tags_name');
+        $this->db->from('D_MANGA');
+        $this->db->join('D_TAGS_MANGA','D_MANGA.manga_id = D_TAGS_MANGA.manga_id','left');
+        $this->db->join('D_TAGS','D_TAGS_MANGA.tags_id = D_TAGS.tags_id','left');
+        $this->db->where('D_MANGA.manga_id',$manga_id);
+        $this->db->where_in('D_TAGS_MANGA.tags_id',$tags_id);
+        $this->db->group_by('D_TAGS_MANGA.tags_id');
+        $this->db->order_by('D_TAGS_MANGA.tags_id','DESC');
+
+        return $this->db->get()->result_array();
+    }
+
+    public function select_mangaka_for_manga($manga_id) {
+
+        $this->db->select('D_MANGAKA.mangaka_nickname AS author');
+        $this->db->from('D_MANGA');
+        $this->db->join('D_MANGAKA','D_MANGA.mangaka_id = D_MANGAKA.mangaka_id','left');
+        $this->db->where('D_MANGAKA.mangaka_state_code',CONST_MANGAKA_STATE_CODE_SHOW);
+        $this->db->where('D_MANGA.manga_id',$manga_id);
+
+        return $this->db->get()->row()->author;
+
     }
 
  }

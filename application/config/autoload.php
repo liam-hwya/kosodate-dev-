@@ -89,7 +89,7 @@ $autoload['drivers'] = array();
 |
 |	$autoload['helper'] = array('url', 'file');
 */
-$autoload['helper'] = array('nad_date');
+$autoload['helper'] = array('nad_date','url','manga_helper');
 
 /*
 | -------------------------------------------------------------------

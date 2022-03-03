@@ -41,14 +41,20 @@
             margin: 0 auto;
         }
 
-        .article-list p {
+        .article-list div.manga {
             padding: 20px;
             border: 1px solid #000;
         }
 
-        .article-list p a {
+        .article-list div.manga a {
             color: #000;
             text-decoration: none;
+        }
+
+        a.view-detail {
+            border: 1px solid #000;
+            padding: 6px;
+            background: orange;
         }
 
     </style>
@@ -65,15 +71,23 @@
 
             <div class="flex">
                 <div>Article Search</div> 
-                <input type="text">
+                <form action="<?= $base_url ?>" method="GET">
+                    <input type="text" name="manga">
+                    <input type="submit" name="search">
+                </form>
             </div>
             
-            <div class="article-list">
-                <p><a href="">Article</a></p>
-                <p><a href="#">Article</a></p>
-                <p><a href="#">Article</a></p>
-                <p><a href="#">Article</a></p>
-            </div>
+            <?php if(!is_null($manga_list)) : ?>
+                <div class="article-list">
+                    <?php foreach($manga_list as $manga): ?>
+                        <div class="manga">
+                            <p>Manga Title <b><?= $manga['manga_title'] ?></b> </p>
+                            <p>Manga Date <b><?= $manga['manga_date'] ?></b> </p>
+                            <a href="<?= $manga_detail_url.$manga['manga_id'] ?>" class="view-detail">View Detail</a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
             
 
         </div>

@@ -3,9 +3,10 @@
  class RSS_log_item_model extends CI_MODEL {
 
     public function create_rss($data,$channel_id) {
+        
         foreach($data as $rss_item){
 
-            $rss_item['log_channel_id'] = $channel_id;
+            $rss_item['log_channel_id'] = $channel_id; //insert channel id
             $this->db->insert('RSS_LOG_ITEM',$rss_item);  
         }
         return true;

@@ -47,42 +47,77 @@
         <div class="container">
             <h3>RSS registration screen</h3>
 
-            <div class="flex">
-                <div>Article ID</div> 
-                <div><?= $id ?></div>
-            </div>
-            
-            <div class="flex">
-                <div>
-                    <p>Title</p>
+            <?php if(is_null($manga_detail)): ?>
+
+                <p>There is no manga related with this manga id <b><?= $manga_id ?></b></p>
+
+            <?php else: ?>
+                <div class="flex">
+                    <div>Article ID</div> 
+                    <div><?= $manga_detail->manga_id ?></div>
+                </div>
+                
+                <div class="flex">
+                    <p>TItle</p>
+                    <p><b><?= $manga_detail->manga_title ?></b></p>
+                </div>
+
+                <div class="flex">
                     <p>Link</p>
+                    <p><b><?= MANGA_URL.$manga_detail->manga_id ?></b></p>
+                </div>
+
+                <div class="flex">
                     <p>Explanation</p>
+                    <p><b><?= $manga_detail->manga_intro ?></b></p>
+                </div>
+
+                <div class="flex">
                     <p>Contents</p>
+                    <p><b><?= $manga_detail->manga_detail ?></b></p>
+                </div>
+
+                <div class="flex">
                     <p>Image file associated with the article</p>
+                </div>
+
+                <div class="flex">
                     <p>Image file displayed in the article list</p>
+                    <?php if(!is_null($manga_media)): ?>
+                        <p>
+                            <?php foreach($manga_media as $media): ?>
+                                <b><?= KOSODATE_IMG_URL.$media['img_url'] ?></b>
+                            <?php endforeach; ?>
+                        </p>
+                    <?php endif; ?>
+                </div>
+
+                <div class="flex">
                     <p>Related link 1</p>
+                    <p>
+                        <b><?= MANGA_URL.$related_manga[0]['manga_id'] ?></b>
+                    </p>            
+                </div>
+
+                <div class="flex">
                     <p>Related link 2</p>
+                    <p>
+                        <b><?= MANGA_URL.$related_manga[1]['manga_id'] ?></b>
+                    </p>            
+                </div>
+
+                <div class="flex">
                     <p>Related link 3</p>
-                    <p>Delete modification flag</p>
+                    <p>
+                        <b><?= MANGA_URL.$related_manga[2]['manga_id'] ?></b>
+                    </p>            
                 </div>
-                <div>
-                    <p><input type="text" value="value"></p>
-                    <p><input type="text" value="value"></p>
-                    <p><input type="text" value="value"></p>
-                    <p><input type="text" value="value"></p>
-                    <p><input type="text" value="value"></p>
-                    <p><input type="text" value="value"></p>
-                    <p><input type="text" value="value"></p>
-                    <p><input type="text" value="value"></p>
-                    <p><input type="text" value="value"></p>
-                    <p><select name="delete" id="">
-                        <option value="fix">Fix</option>
-                        <option value="delete">Delete</option>
-                    </select></p>
-                    <input type="submit" value="Submit">
-                </div>
-            </div>
-            
+            <?php endif; ?>
+
+            <form action="<?= $base_url ?>" method="POST">
+                <input type="hidden" name="manga_id" value="<?= $manga_id ?>">
+                <input type="submit" name="manga_register" value="register">
+            </form>
 
         </div>
 
