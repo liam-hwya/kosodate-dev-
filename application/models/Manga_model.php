@@ -2,7 +2,7 @@
 
  class Manga_model extends CI_MODEL {
 
-    public function select_manga($manga=FALSE) {
+    public function select_manga($manga=null) {
         
         $tags_id = $this->tags_id();
 
@@ -28,15 +28,8 @@
         $this->db->join('D_TAGS','D_TAGS_MANGA.tags_id = D_TAGS.tags_id','left');
         $this->db->where('D_MANGA.manga_deleted',NO_DELETE_FLAG);
         $this->db->where('D_MANGA.manga_state_code',CONST_MANGA_STATE_CODE_PUBLIC);
-        // $this->db->where('D_MANGA.manga_date >=',nad_jp_date());
-        // $this->db->where('D_MANGA.manga_date <=',nad_jp_date('','',$end_date=true));
-        $this->db->where('D_MANGA.manga_date >=','2020-07-01 0:00:00');
-        $this->db->where('D_MANGA.manga_date <=','2020-07-31 23:59:59');
         $this->db->where('D_MANGAKA.mangaka_state_code',CONST_MANGAKA_STATE_CODE_SHOW);
         $this->db->where_in('D_TAGS_MANGA.tags_id',$tags_id);
-        if(!empty($manga)) {
-            $this->db->like('D_MANGA.manga_title',$manga);
-        } 
         $this->db->group_by('D_TAGS_MANGA.tags_id');
         $this->db->group_by('D_MANGA.manga_id');
         $this->db->order_by('D_TAGS_MANGA.tags_id','DESC');
@@ -201,9 +194,16 @@
         }
 
         $this->db->like('manga_title',$manga);
+        $this->db->join('D_MANGAKA','D_MANGA.mangaka_id = D_MANGAKA.mangaka_id','left');
+        $this->db->join('D_MEDIA AS D_MEDIA_1','D_MANGA.manga_media_id = D_MEDIA_1.media_id','left');
         $this->db->where('D_MANGA.manga_deleted',NO_DELETE_FLAG);
         $this->db->where('D_MANGA.manga_state_code',CONST_MANGA_STATE_CODE_PUBLIC);
-        $sql = $this->db->get('d_manga');
+        $this->db->where('D_MANGAKA.mangaka_state_code',CONST_MANGAKA_STATE_CODE_SHOW);
+        $this->db->group_by('D_MANGA.manga_id');
+        $this->db->order_by('D_MANGA.manga_date','DESC');
+        $this->db->limit(CONST_RSS_MANGA_ITEM_NUM);
+
+        $sql = $this->db->get('D_MANGA');
 
         return $sql->result_array();
     }

@@ -59,13 +59,17 @@ class Ad_modify_rss extends CI_Controller{
             $manga_media = $this->Manga_model->select_manga_media($index);
             $manga_tags = $this->Manga_model->select_tags_for_manga($index);
         }
-
+        
         $base_url_str = "/admin/ad_modify_rss/register";
         $base_url = site_url($base_url_str);
 
-        $tags = manga_tag_sort($index,$manga_tags); //Sort the manga tags
-        $tags_condition = manga_tag_condition($index,$tags); //Get the condition for manga tags.
-        $related_manga = $this->Manga_model->select_related_manga_for_tags($tags_condition);
+        if(!empty($manga_tags)){
+            $tags = manga_tag_sort($index,$manga_tags); //Sort the manga tags
+            $tags_condition = manga_tag_condition($index,$tags); //Get the condition for manga tags.
+            $related_manga = $this->Manga_model->select_related_manga_for_tags($tags_condition);
+        }else{
+            $related_manga = null;
+        }
 
         $view_data['manga_detail'] = $manga_detail;
         $view_data['manga_media'] = $manga_media;
@@ -105,6 +109,7 @@ class Ad_modify_rss extends CI_Controller{
             $rss_manga['enclosure'] = $manga_media[0]['img_url'];
             $rss_manga['thumbnail'] = $manga_media[0]['img_url'];
 
+            // Encoded tags
             $rss_manga['encoded'] = '<![CDATA[<p>体験談投稿</p><p>'.$manga->story_name.'</p>';
             if(!empty($manga->story_mama_year_old)){
                 $rss_manga['encoded'] .= '<p>'.$manga->story_mama_year_old.'</p>';
@@ -123,6 +128,7 @@ class Ad_modify_rss extends CI_Controller{
             $rss_manga['encoded'] .= '</p>';
             $rss_manga['encoded'] .= $insta_tag."]]>";
 
+            // Related Tags
             $rss_manga['relatedlink'] = '';
 
             foreach($related_manga as $manga){
@@ -131,9 +137,13 @@ class Ad_modify_rss extends CI_Controller{
 
             $data[] = $rss_manga;
 
+            // Insert into table
             $channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
+            $items = $this->RSS_log_item_model->select_count($channel_id);
+            $items->
             if($this->RSS_log_item_model->create_rss($data,$channel_id)) {
-                return 'inserted';
+                $channel = $this->RSS_log_channel_model->select_latest_channel();
+
             }
 
         }

@@ -92,26 +92,28 @@
                     <?php endif; ?>
                 </div>
 
-                <div class="flex">
-                    <p>Related link 1</p>
-                    <p>
-                        <b><?= MANGA_URL.$related_manga[0]['manga_id'] ?></b>
-                    </p>            
-                </div>
+                <?php if(!is_null($related_manga)): ?>
+                    <div class="flex">
+                        <p>Related link 1</p>
+                        <p>
+                            <b><?= MANGA_URL.$related_manga[0]['manga_id'] ?></b>
+                        </p>            
+                    </div>
 
-                <div class="flex">
-                    <p>Related link 2</p>
-                    <p>
-                        <b><?= MANGA_URL.$related_manga[1]['manga_id'] ?></b>
-                    </p>            
-                </div>
+                    <div class="flex">
+                        <p>Related link 2</p>
+                        <p>
+                            <b><?= MANGA_URL.$related_manga[1]['manga_id'] ?></b>
+                        </p>            
+                    </div>
 
-                <div class="flex">
-                    <p>Related link 3</p>
-                    <p>
-                        <b><?= MANGA_URL.$related_manga[2]['manga_id'] ?></b>
-                    </p>            
-                </div>
+                    <div class="flex">
+                        <p>Related link 3</p>
+                        <p>
+                            <b><?= MANGA_URL.$related_manga[2]['manga_id'] ?></b>
+                        </p>            
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <form action="<?= $base_url ?>" method="POST">

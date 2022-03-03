@@ -30,5 +30,14 @@
         return $this->db->get()->result_array();
     }
 
+    public function select_count($channel_id) {
+
+        $this->db->select('count(*)');
+        $this->db->from('RSS_LOG_ITEM');
+        $sql = $this->db->where('log_channel_id',$channel_id);
+        return $this->db->get()->row();
+
+    }
+
     
  }
