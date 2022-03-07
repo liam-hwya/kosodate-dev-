@@ -17,6 +17,7 @@
         $this->db->from('RSS_LOG_CHANNEL');
         $this->db->order_by('logid','DESC');
         $this->db->limit(1);
+        
         return $this->db->get()->row();
     }
 

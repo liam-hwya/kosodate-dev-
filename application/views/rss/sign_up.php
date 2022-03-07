@@ -77,7 +77,7 @@
                 </form>
             </div>
             
-            <?php if(!is_null($manga_list)) : ?>
+            <?php if(!empty($manga_list)) : ?>
                 <div class="article-list">
                     <?php foreach($manga_list as $manga): ?>
                         <div class="manga">
@@ -88,8 +88,6 @@
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-            
-
         </div>
 
         

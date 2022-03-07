@@ -79,6 +79,11 @@
 
                 <div class="flex">
                     <p>Image file associated with the article</p>
+                    <?php if(!is_null($manga_media)): ?>
+                        <p>
+                            <b><?= KOSODATE_IMG_URL.$manga_media[0]['img_url'] ?></b>
+                        </p>
+                    <?php endif; ?>
                 </div>
 
                 <div class="flex">
