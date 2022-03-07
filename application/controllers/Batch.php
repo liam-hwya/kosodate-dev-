@@ -59,9 +59,9 @@ class Batch extends CI_Controller {
 
         }else{
             // Preparing XML  Channel data
-            $channel_data['title'] = "こそだてDAYS";
-            $channel_data['link'] = "https://www.kosodatedays.com/";
-            $channel_data['description'] = "こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。";
+            $channel_data['title'] = CONST_SITE_NAME;
+            $channel_data['link'] = CONST_SITE_URL;
+            $channel_data['description'] = CONST_HEADER_META_DESCRIPTION;
             $channel_data['pubDate'] = nad_jp_date();
             $channel_data['language'] = "ja";
             $channel_data['copyright'] = "©2017 EvolvedInfo. All Rights Reserved.";
@@ -174,7 +174,7 @@ class Batch extends CI_Controller {
             {
               $xml.='<item>';
                 $xml.='<title>'.$item['title'].'</title>';
-                $xml.='<link>'.$item['link'].'</link>';
+                    $xml.='<link>'.$item['link'].'</link>';
                 $xml.='<guid>'.$item['guid'].'</guid>';
                 $xml.='<category>'.$item['category'].'</category>';
                 $xml.='<description>'.$item['description'] .'</description>';

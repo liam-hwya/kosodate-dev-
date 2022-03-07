@@ -117,4 +117,7 @@ define('TWO_CASE_FOR_AGE',2);
 define('THREE_CASE_FOR_AGE',3);
 
 define('INSTAGRAM_TAG_LOCATION_INDEX',-3);
-define('RSS_FEED_LINK','http://localhost:8080/kosodate-dev/rss-mamatena');
+define('RSS_FEED_LINK','http://localhost:8888/kosodate(local)/rss-mamatena');
+define('CONST_SITE_NAME', 'こそだてDAYS'); //this is already existed on server constants.php
+define('CONST_SITE_URL', 'https://www.kosodatedays.com/');
+define('CONST_HEADER_META_DESCRIPTION', 'こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。');

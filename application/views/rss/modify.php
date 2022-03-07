@@ -41,14 +41,20 @@
             margin: 0 auto;
         }
 
-        .article-list p {
+        .article-list .manga {
             padding: 20px;
             border: 1px solid #000;
         }
 
-        .article-list p a {
+        .article-list .manga a {
             color: #000;
             text-decoration: none;
+        }
+
+        a.view-detail {
+            border: 1px solid #000;
+            padding: 6px;
+            background: orange;
         }
 
     </style>
@@ -68,12 +74,17 @@
                 <input type="text">
             </div>
             
-            <div class="article-list">
-                <p><a href="detail/1">Article</a></p>
-                <p><a href="detail/2">Article</a></p>
-                <p><a href="detail/3">Article</a></p>
-                <p><a href="detail/4">Article</a></p>
-            </div>
+            <?php if(!is_null($manga_list)) : ?>
+                <div class="article-list">
+                    <?php foreach($manga_list as $manga): ?>
+                        <div class="manga">
+                            <p>Manga Title <b><?= $manga['title'] ?></b> </p>
+                            <p>Manga Date <b><?= $manga['pubDate'] ?></b> </p>
+                            <a href="<?= $manga_detail_url.$manga['log_item_id'] ?>" class="view-detail">View Detail</a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
             
 
         </div>

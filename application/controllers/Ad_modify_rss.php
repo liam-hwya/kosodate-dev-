@@ -18,16 +18,36 @@ class Ad_modify_rss extends CI_Controller{
 
     public function index() {
 
-        $view_data = [
-            'release_date' => nad_jp_date('','Y-m-d').' '.nad_jp_date('','Y-m-d',$end_date=true)
-        ];
+        $channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
+        $newly_registered_items = $this->RSS_log_item_model->select_latest_items($channel_id);
+
+        $view_data['release_date'] = nad_jp_date('','Y-m-d').' '.nad_jp_date('','Y-m-d',$end_date=true);
+        $view_data['newly_registered_items'] = $newly_registered_items;
 
         $this->load->view('rss/item_lists',$view_data);
     }
 
     public function modify() {
 
-        $this->load->view('rss/modify');
+        $get_data['manga'] = $this->input->get('manga');
+        $manga = !empty($get_data['manga']) ? $get_data['manga'] : '';
+
+        $base_url_str = "/admin/ad_modify_rss/modify";
+        $base_url_str .= "?search=" . $manga;
+        $base_url = site_url($base_url_str);
+
+        $manga_detail_url_str = "/admin/ad_modify_rss/detail/";
+        $manga_detail_url = site_url($manga_detail_url_str);
+
+        $channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
+        $manga_list = $this->RSS_log_item_model->search_manga_from_rss($channel_id, $manga);
+        
+        $view_data['search'] = $manga;
+        $view_data['base_url'] = $base_url;
+        $view_data['manga_list'] = $manga_list;
+        $view_data['manga_detail_url'] = $manga_detail_url;
+
+        $this->load->view('rss/modify',$view_data);
     }
 
     public function sign_up() {
@@ -106,8 +126,8 @@ class Ad_modify_rss extends CI_Controller{
             $rss_manga['pubDate'] = nad_jp_date();
             $rss_manga['modifiedDate'] = NULL;
             $rss_manga['delete'] = $manga->manga_deleted;
-            $rss_manga['enclosure'] = $manga_media[0]['img_url'];
-            $rss_manga['thumbnail'] = $manga_media[0]['img_url'];
+            $rss_manga['enclosure'] = KOSODATE_IMG_URL.$manga_media[0]['img_url'];
+            $rss_manga['thumbnail'] = KOSODATE_IMG_URL.$manga_media[0]['img_url'];
 
             // Encoded tags
             $rss_manga['encoded'] = '<![CDATA[<p>体験談投稿</p><p>'.$manga->story_name.'</p>';
@@ -135,18 +155,104 @@ class Ad_modify_rss extends CI_Controller{
                 $rss_manga['relatedlink'] .= '<relatedlink title="'.$manga['manga_title'].'" link="'.MANGA_URL.$manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$manga['img_url'].'"/>';
             }
 
-            $data[] = $rss_manga;
+            $item_data[] = $rss_manga;
 
-            // Insert into table
+            // Checkpoint of new channel
+            $channel = $this->RSS_log_channel_model->select_latest_channel();
             $channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
-            $items = $this->RSS_log_item_model->select_count($channel_id);
-            $items->
-            if($this->RSS_log_item_model->create_rss($data,$channel_id)) {
-                $channel = $this->RSS_log_channel_model->select_latest_channel();
+            $today = nad_jp_date('','Y-m-d');
+            echo '<pre>';
+            var_dump($channel->pubDate);
+            var_dump(nad_jp_date($channel->pubDate,'Y-m-d'));
+            var_dump($today);
+            var_dump(nad_jp_date($channel->pubDate,'Y-m-d') == $today); die();
+            if(nad_jp_date($channel->pubDate,'Y-m-d') == $today) { // Existing channel
+
+                $items = $this->RSS_log_item_model->select_count($channel_id);
+                if($items[0]['count(*)'] <= CONST_RSS_MANGA_ITEM_NUM) { // Checkpoint of the limit of manga
+                    
+                    if($this->RSS_log_item_model->create_rss($item_data,$channel_id)) { //insert into item table
+
+                        $xml = $this->get_rss_xml($channel_id,$channel);
+
+                        $updated_data = [
+                            'RSS_XML' => $xml,
+                            'last_time2' => nad_jp_date()
+                        ];
+                        if($this->RSS_log_channel_model->update_channel($channel_id,$updated_data)) {
+                            echo "Updated";
+                        }
+                    }
+                }
+                
+            }else { // New Channel
+                $channel_data = $this->new_channel($channel_id,$item_data);
+
+                $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
+    
+                if ($this->RSS_log_item_model->create_rss($item_data, $new_channel_id)) {
+                    return true;
+                }
 
             }
 
+            
+
+            
+            
+
         }
+    }
+
+    private function get_rss_xml($channel_id,$channel,$items=null) {
+        
+        if (is_null($items)) {
+            $items = $this->RSS_log_item_model->select_items($channel_id, $delete=false);
+        }
+
+        $xml='<?xml version="1.0" encoding="UTF-8" ?>';
+        $xml.='<channel>';
+        $xml.='<title>'.$channel->title.'</title>';
+        $xml.='<link>'.$channel->link.'</link>';
+        $xml.='<description>'.$channel->description.'</description>';
+        $xml.='<pubDate>'.nad_jp_date($channel->pubDate,$format='RFC822').'</pubDate>';
+        $xml.='<language>'.$channel->language.'</language>';
+        $xml.='<copyright>'.$channel->copyright.'</copyright>';
+        foreach($items as $item)
+        {
+          $xml.='<item>';
+            $xml.='<title>'.$item['title'].'</title>';
+            $xml.='<link>'.$item['link'].'</link>';
+            $xml.='<guid>'.$item['guid'].'</guid>';
+            $xml.='<category>'.$item['category'].'</category>';
+            $xml.='<description>'.$item['description'] .'</description>';
+            $xml.='<pubDate>'.nad_jp_date($item['pubDate'],$format='RFC822').'</pubDate>';
+            $xml.='<modifiedDate>'.nad_jp_date($item['modifiedDate'],$format='RFC822').'</modifiedDate>';
+            $xml.='<encoded>'.$item['encoded'] .'</encoded>';
+            $xml.='<delete>'.$item['delete'] .'</delete>';
+            $xml.='<enclosure url="'.$item['enclosure'] .'"/>';
+            $xml.='<thumbnail url="'.$item['thumbnail'] .'"/>';
+            $xml.=$item['relatedlink'];
+          $xml.='</item>';
+        }
+        $xml.='</channel>';
+
+        return $xml;
+
+    }
+
+    private function new_channel($channel_id,$data) {
+
+        $channel_data['title'] = "こそだてDAYS";
+        $channel_data['link'] = "https://www.kosodatedays.com/";
+        $channel_data['description'] = "こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。";
+        $channel_data['pubDate'] = nad_jp_date();
+        $channel_data['language'] = "ja";
+        $channel_data['copyright'] = "©2017 EvolvedInfo. All Rights Reserved.";
+        $xml = $this->get_rss_xml($channel_id,(object) $channel_data,$data);
+        $channel_data['RSS_XML'] = $xml;
+        return $channel_data;
+
     }
 
 }

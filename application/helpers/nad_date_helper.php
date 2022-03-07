@@ -22,7 +22,6 @@ if (!function_exists('nad_jp_date')) {
 
         $t = new DateTime($date);
         $t->setTimezone(new DateTimeZone($timezone));
-        
         if($end_date) {
             
             return ($format)? $t->format('Y-m-t') : $t->format('Y-m-t 23:59:59');

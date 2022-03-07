@@ -34,8 +34,44 @@
 
         $this->db->select('count(*)');
         $this->db->from('RSS_LOG_ITEM');
-        $sql = $this->db->where('log_channel_id',$channel_id);
+        $this->db->where('log_channel_id',$channel_id);
+
+        return $this->db->get()->result_array();
+
+    }
+
+    public function select_items($channel_id) {
+
+        $this->db->select('*');
+        $this->db->from('RSS_LOG_ITEM');
+        $this->db->where('log_channel_id',$channel_id);
+
+        return $this->db->get()->result_array();
+    }
+
+    public function select_latest_items($channel_id) {
+
+        $this->db->select('*');
+        $this->db->from('RSS_LOG_ITEM');
+        $this->db->where('log_channel_id',$channel_id);
+        $this->db->order_by('log_item_id','DESC');
+        $this->db->limit(1);
+
         return $this->db->get()->row();
+    }
+
+    public function search_manga_from_rss($channel_id,$manga) {
+
+        if(empty($manga)){
+            return NULL;
+        }
+
+        $this->db->like('title',$manga);
+        $this->db->where('log_channel_id',$channel_id);
+        $sql = $this->db->get('RSS_LOG_ITEM');
+
+        return $sql->result_array();
+
 
     }
 

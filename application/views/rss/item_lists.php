@@ -57,9 +57,7 @@
                 <div>Posted content</div>
                 <div>
                     <a href="ad_modify_rss/sign_up">sign up</a>
-                    <p><a href="">Newly registered content</a></p>
-                    <p><a href="">Newly registered content</a></p>
-                    <p><a href="">Newly registered content</a></p>
+                    <p><a href="#">newly registered contents</a></p>
                     <i><a href="ad_modify_rss/modify">Correction or deletion of posted content</a></i>
                     <p><a href="">Corrected registration content</a></p>
                     <p><a href="">Corrected registration content</a></p>
