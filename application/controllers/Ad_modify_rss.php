@@ -74,14 +74,28 @@ class Ad_modify_rss extends CI_Controller{
 
     public function detail($index = FALSE) {
         
-        if($index) {
-            $manga_detail = $this->Manga_model->select_manga_detail($index);
-            $manga_media = $this->Manga_model->select_manga_media($index);
-            $manga_tags = $this->Manga_model->select_tags_for_manga($index);
+        if(!$index){
+            return "There is no manga id";
+            die();
         }
-        $base_url_str = "/admin/ad_modify_rss/register";
-        $base_url = site_url($base_url_str);
-        // var_dump(empty($manga_tags));die();
+
+        $action = $this->input->get('action');
+        if($action == 'register'){
+            $manga_detail = $this->Manga_model->select_manga_detail($index);
+        }elseif($action == 'update'){
+            $manga_detail = $this->RSS_log_item_model->select_items_by_id($index);
+        }
+        if(empty($manga_detail)) {
+            $manga_detail = null;
+        }
+        $manga_media = $this->Manga_model->select_manga_media($index);
+        $manga_tags = $this->Manga_model->select_tags_for_manga($index);
+        // var_dump($manga_detail);die();
+        $register_url_str = "/admin/ad_modify_rss/register";
+        $register_url = site_url($register_url_str);
+        $update_url_str = "/admin/ad_modify_rss/update";
+        $update_url = site_url($update_url_str);
+
         if(!empty($manga_tags)){
             $tags = manga_tag_sort($index,$manga_tags); //Sort the manga tags
             $tags_condition = manga_tag_condition($index,$tags); //Get the condition for manga tags.
@@ -89,18 +103,28 @@ class Ad_modify_rss extends CI_Controller{
         }else{
             $related_manga = null;
         }
-
+        
         $view_data['manga_detail'] = $manga_detail;
         $view_data['manga_media'] = $manga_media;
         $view_data['manga_id'] = $index;
         $view_data['related_manga'] = $related_manga;
-        $view_data['base_url'] = $base_url;
+        $view_data['register_url'] = $register_url;
+        $view_data['update_url'] = $update_url;
+        
+        if(!empty($action)){
+            $view_data['action'] = $action;
+        }
 
         $this->load->view('rss/detail',$view_data);
 
     }
 
     public function register() {
+
+        if(!$this->input->post('manga_register')){
+            echo "You don't have access to this route";
+            die();
+        }
 
         $manga_id = $this->input->post('manga_id');
         if(!empty($manga_id)) {
@@ -129,8 +153,8 @@ class Ad_modify_rss extends CI_Controller{
             $rss_manga['pubDate'] = nad_jp_date();
             $rss_manga['modifiedDate'] = NULL;
             $rss_manga['delete'] = $manga->manga_deleted;
-            $rss_manga['enclosure'] = KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
-            $rss_manga['thumbnail'] = KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
+            $rss_manga['enclosure'] = (empty($manga_media[0]['img_url']))? '':KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
+            $rss_manga['thumbnail'] = (empty($manga_media[0]['img_url']))? '':KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
 
             // Encoded tags
             $rss_manga['encoded'] = '<![CDATA[<p>体験談投稿</p><p>'.$manga->story_name.'</p>';
@@ -168,8 +192,8 @@ class Ad_modify_rss extends CI_Controller{
             $today = nad_jp_date('','Y-m-d');
             if(nad_jp_date($channel->pubDate,'Y-m-d')==$today) { // Existing channel nad_jp_date($channel->pubDate,'Y-m-d')==$today
 
-                $items = $this->RSS_log_item_model->select_items($channel_id);
-                if(count($items) <= CONST_RSS_MANGA_ITEM_NUM && $this->unique_manga_id($items)) { // Checkpoint of the limit of manga
+                $items = $this->RSS_log_item_model->select_items_by_channel_id($channel_id);
+                if(count($items) <= CONST_RSS_MANGA_ITEM_NUM && $this->unique_manga_id($items,$manga_id)) { // Checkpoint of the limit of manga
                     
                     if($this->RSS_log_item_model->create_rss($item_data,$channel_id)) { //insert into item table
 
@@ -202,10 +226,82 @@ class Ad_modify_rss extends CI_Controller{
         }
     }
 
+    public function update(){
+
+        if(!$this->input->post('manga_update')){
+            echo "You don't have access to this route";
+            die();
+        }
+        $manga = $this->input->post('manga');
+        // echo "<pre>";
+        // var_dump($manga['delete']);die();
+        $related_manga = $this->input->post('related_manga');
+        // echo "<pre>";
+        // var_dump($manga);
+        // var_dump($related_manga);die();
+        $manga_id = $manga['guid'];
+        $item_data['guid'] = $manga['guid'];
+        $item_data['title'] = $manga['title'];
+        $item_data['link'] = $manga['link'];
+        $item_data['category'] = $manga['category'];
+        $item_data['description'] = $manga['description'];
+        $item_data['encoded'] = $manga['encoded'];
+        $item_data['thumbnail'] = $manga['img_url']['thumbnail'];
+        $item_data['enclosure'] = $manga['img_url']['enclosure'][0];
+        $item_data['delete'] = $manga['delete'];
+        $item_data['pubDate'] = $manga['pubDate'];
+
+        $relatedlink = '';
+        if (!is_null($related_manga)) {
+            foreach ($related_manga as $manga) {
+                $relatedlink .= '<relatedlink title="'.$manga['manga_title'].'" link="'.MANGA_URL.$manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$manga['img_url'].'"/>';
+            }
+        }
+        $item_data['relatedlink'] = $relatedlink;
+        
+        $item_data['modifiedDate'] = nad_jp_date();
+        $item_data['pubDate'] = nad_jp_date();
+        $item_data['last_time'] = nad_jp_date();
+
+        $channel = $this->RSS_log_channel_model->select_latest_channel();
+        $channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
+        $today = nad_jp_date('','Y-m-d');
+        if(nad_jp_date($channel->pubDate,'Y-m-d')==$today){
+            $item_data['log_channel_id'] = $channel_id;
+            if($this->RSS_log_item_model->update_manga($item_data,$manga_id)){
+                $xml = $this->get_rss_xml($channel_id,$channel);
+
+                $updated_data = [
+                    'RSS_XML' => $xml,
+                    'last_time2' => nad_jp_date()
+                ];
+                if($this->RSS_log_channel_model->update_channel($channel_id,$updated_data)) {
+                    echo "Updated";
+                }
+            }
+
+        }else{
+            $data[] = $item_data;
+            $channel_data = $this->new_channel($channel_id,$data);
+
+            $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
+            $item_data['log_channel_id'] = $new_channel_id;
+            if ($this->RSS_log_item_model->update_manga($item_data, $manga_id)) {
+                echo 'ok';
+            }
+            
+
+        }
+        // if($this->RSS_log_item_model->update_manga($item_data,$manga_id)){
+            
+        // }
+
+    }
+
     private function get_rss_xml($channel_id,$channel,$items=null) {
         
         if (is_null($items)) {
-            $items = $this->RSS_log_item_model->select_items($channel_id, $delete=false);
+            $items = $this->RSS_log_item_model->select_items_by_channel_id($channel_id, $delete=false);
         }
 
         $xml='<?xml version="1.0" encoding="UTF-8" ?>';
@@ -236,7 +332,6 @@ class Ad_modify_rss extends CI_Controller{
         $xml.='</channel>';
 
         return $xml;
-
     }
 
     private function new_channel($channel_id,$data) {
@@ -253,14 +348,15 @@ class Ad_modify_rss extends CI_Controller{
 
     }
 
-    private function unique_manga_id($items) {
+    private function unique_manga_id($items,$manga_id) {
         $id = [];
 
         foreach($items as $item) {
-            if(in_array($item['guid'],$id)){
-                return false;
-            }
             $id[] = $item['guid'];
+        }
+
+        if(in_array($manga_id,$id)){
+            return false;
         }
 
         return true;

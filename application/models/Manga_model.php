@@ -28,8 +28,8 @@
         $this->db->join('D_TAGS','D_TAGS_MANGA.tags_id = D_TAGS.tags_id','left');
         $this->db->where('D_MANGA.manga_deleted',NO_DELETE_FLAG);
         $this->db->where('D_MANGA.manga_state_code',CONST_MANGA_STATE_CODE_PUBLIC);
-        $this->db->where('D_MANGA.manga_date >=', '2021-04-01 0:00:00');
-        $this->db->where('D_MANGA.manga_date <=', '2021-04-30 23:59:59');
+        $this->db->where('D_MANGA.manga_date >=', '2020-02-01 0:00:00');
+        $this->db->where('D_MANGA.manga_date <=', '2020-02-29 23:59:59');
         // $this->db->where('D_MANGA.manga_date >=',date("Y-m-01 00:00:00",strtotime("-1 year")));
         // $this->db->where('D_MANGA.manga_date <=',date("Y-m-01 23:59:59",strtotime("-1 year")));
         $this->db->where('D_MANGAKA.mangaka_state_code',CONST_MANGAKA_STATE_CODE_SHOW);

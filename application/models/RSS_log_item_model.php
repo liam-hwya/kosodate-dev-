@@ -40,11 +40,11 @@
 
     }
 
-    public function select_items($channel_id) {
+    public function select_items_by_id($log_id) {
 
         $this->db->select('*');
         $this->db->from('RSS_LOG_ITEM');
-        $this->db->where('log_channel_id',$channel_id);
+        $this->db->where('guid',$log_id);
 
         return $this->db->get()->result_array();
     }
@@ -71,8 +71,14 @@
         $sql = $this->db->get('RSS_LOG_ITEM');
 
         return $sql->result_array();
+    }
 
+    public function update_manga($update_data,$manga_id) {
 
+        $this->db->where('guid',$manga_id);
+        $this->db->update('RSS_LOG_ITEM',$update_data);
+
+        return true;
     }
 
     

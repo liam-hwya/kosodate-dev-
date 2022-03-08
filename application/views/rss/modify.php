@@ -70,8 +70,10 @@
             <h3>RSS Registration screen</h3>
 
             <div class="flex">
-                <div>Article Search</div> 
-                <input type="text">
+                <form action="<?= $base_url ?>" method="GET">
+                    <input type="text" name="manga">
+                    <input type="submit" name="search">
+                </form>
             </div>
             
             <?php if(!is_null($manga_list)) : ?>
@@ -80,7 +82,7 @@
                         <div class="manga">
                             <p>Manga Title <b><?= $manga['title'] ?></b> </p>
                             <p>Manga Date <b><?= $manga['pubDate'] ?></b> </p>
-                            <a href="<?= $manga_detail_url.$manga['log_item_id'] ?>" class="view-detail">View Detail</a>
+                            <a href="<?= $manga_detail_url.$manga['guid'].'?action=update' ?>" class="view-detail">View Detail</a>
                         </div>
                     <?php endforeach; ?>
                 </div>

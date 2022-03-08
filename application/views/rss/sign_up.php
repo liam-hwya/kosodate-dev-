@@ -83,7 +83,7 @@
                         <div class="manga">
                             <p>Manga Title <b><?= $manga['manga_title'] ?></b> </p>
                             <p>Manga Date <b><?= $manga['manga_date'] ?></b> </p>
-                            <a href="<?= $manga_detail_url.$manga['manga_id'] ?>" class="view-detail">View Detail</a>
+                            <a href="<?= $manga_detail_url.$manga['manga_id'].'?action=register' ?>" class="view-detail">View Detail</a>
                         </div>
                     <?php endforeach; ?>
                 </div>

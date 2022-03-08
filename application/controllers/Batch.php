@@ -59,8 +59,8 @@ class Batch extends CI_Controller {
 
         }else{
             // Preparing XML  Channel data
-            $channel_data['title'] = CONST_SITE_NAME;
-            $channel_data['link'] = CONST_SITE_URL;
+            $channel_data['title'] = $this->config->item('rss_site_title');
+            $channel_data['link'] = $this->config->item('rss_site_link');
             $channel_data['description'] = CONST_HEADER_META_DESCRIPTION;
             $channel_data['pubDate'] = nad_jp_date();
             $channel_data['language'] = "ja";
@@ -68,7 +68,7 @@ class Batch extends CI_Controller {
 
             //For skipping the same manga id
             $uniq_manga_id = 0;
-
+            // var_dump($d_manga_col);die();
             // Preparing XML item data
             foreach($d_manga_col as $key=>$manga_item){
                 if($uniq_manga_id != $manga_item['id']){
