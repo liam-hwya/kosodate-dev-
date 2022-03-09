@@ -18,6 +18,7 @@ class RSS extends CI_Controller
         $this->load->helper('text');
         $this->load->model('RSS_log_channel_model', 'RSS_log_channel_model');
         $this->load->model('RSS_log_item_model', 'RSS_log_item_model');
+
     }
 
     public function feed() {
@@ -28,15 +29,12 @@ class RSS extends CI_Controller
             echo "There is no data yet";
             die();
         }else{
-            $data = [
-                'rss_output' => $rss_channel_data->RSS_XML
-            ];
+            $view_data['rss_output'] = $rss_channel_data->RSS_XML;
         }
         
-        $latest_channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
-        $latest_date = $this->RSS_log_channel_model->select_modified_date($latest_channel_id);
-
-        $latest_date = strtotime($latest_date->last_time2);
+        $latest_channel_id = get_channel_id($rss_channel_data);
+        $latest_date = get_channel_modified_date($rss_channel_data);
+        $latest_date = strtotime($latest_date);
 
         $this->output->set_header('Last-Modified: '.$latest_date);
         if(isset($this->input->request_headers()['If-Modified-Since'])) {
@@ -50,8 +48,7 @@ class RSS extends CI_Controller
         http_response_code(200);
         $this->output->set_header('X-CONTENT-RETURN: YES');
         $this->output->set_header('Content-Type: text/xml');
-        $this->load->view('rss',$data);
-
+        $this->load->view('rss',$view_data);
     }
 }
 

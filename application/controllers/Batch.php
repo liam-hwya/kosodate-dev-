@@ -68,7 +68,7 @@ class Batch extends CI_Controller {
 
             //For skipping the same manga id
             $uniq_manga_id = 0;
-            // var_dump($d_manga_col);die();
+            
             // Preparing XML item data
             foreach($d_manga_col as $key=>$manga_item){
                 if($uniq_manga_id != $manga_item['id']){
@@ -79,7 +79,7 @@ class Batch extends CI_Controller {
                     $item_data[$key]['description'] = "こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。".$manga_item['author']."～「".$manga_item['title']."」をお楽しみください。";
                     $item_data[$key]['pubDate'] = nad_jp_date();
                     $item_data[$key]['modifiedDate'] = null;
-                    $item_data[$key]['delete'] = $manga_item['manga_deleted'];
+                    $item_data[$key]['delete'] = null;
                     $item_data[$key]['enclosure'] = KOSODATE_IMG_URL.$manga_item['img_url'];
                     $item_data[$key]['thumbnail'] = KOSODATE_IMG_URL.$manga_item['img_url'];
                     $item_data[$key]['encoded'] = null;
@@ -97,6 +97,7 @@ class Batch extends CI_Controller {
             
             }
 
+            // Selecting instagram tags
             $insta = $this->RSS_insta_model->select_insta();
             $insta_tag = (is_null($insta)? '': $insta->tag);
             
@@ -117,20 +118,28 @@ class Batch extends CI_Controller {
 
                 $item_data[$key]['encoded'] .= '<p>'.$item_data[$key]['title'].'</p>';          
                 $item_data[$key]['encoded'] .= '<p>'.$item_data[$key]['intro'].'</p>';
-                $item_data[$key]['encoded'] .= '<p>'.date('Y.m.d',strtotime($item_data[$key]['pubDate'])).'</p><p>';
+                $item_data[$key]['encoded'] .= '<p>'.date('Y.m.d',strtotime($item_data[$key]['pubDate'])).'</p>';
                 
+                $item_data[$key]['encoded'] .= '<p>';
                 foreach($manga_img_url_col as $manga_img){
                     $item_data[$key]['encoded'] .= '<img src="'.KOSODATE_IMG_URL.$manga_img['img_url'].'"/>';
                 }
                 $item_data[$key]['encoded'] .= '</p>';
+            
                 $item_data[$key]['encoded'] .= $insta_tag."]]>";
-                
             }
             
-            // Select all related manga for manga's tag 
+            /**
+             * 
+             * Select all related manga for manga's tag 
+             * [manga_id]
+             * --[tags_id]
+             * --[tags_name]
+             * 
+             */
+            
             foreach($d_manga_col as $key=>$item){
-                // $manga_id_tags[$key]['manga__id'] = $item['id'];
-                $manga_id_tags[$item['id']][$key]['tags_id'] = $item['tags_id'];
+                $manga_id_tags[$item['id']][$key]['tags_id'] = $item['tags_id']; 
                 $manga_id_tags[$item['id']][$key]['tags_name'] = $item['tags_name'];
             }
             

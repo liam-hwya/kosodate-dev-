@@ -115,7 +115,7 @@ if (!function_exists('manga_tag_condition')) {
                 ]
             ];
         }
-
+        
         return $tags_condition;
     }
 }

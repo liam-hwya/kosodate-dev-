@@ -151,8 +151,8 @@ class Ad_modify_rss extends CI_Controller{
             $rss_manga['category'] = '<![CDATA[ママコマ漫画]]>';
             $rss_manga['description'] = "こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。".$manga->author."～「".$manga->manga_title."」をお楽しみください。";
             $rss_manga['pubDate'] = nad_jp_date();
-            $rss_manga['modifiedDate'] = NULL;
-            $rss_manga['delete'] = $manga->manga_deleted;
+            $rss_manga['modifiedDate'] = null;
+            $rss_manga['delete'] = null;
             $rss_manga['enclosure'] = (empty($manga_media[0]['img_url']))? '':KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
             $rss_manga['thumbnail'] = (empty($manga_media[0]['img_url']))? '':KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
 
@@ -190,7 +190,7 @@ class Ad_modify_rss extends CI_Controller{
             $channel = $this->RSS_log_channel_model->select_latest_channel();
             $channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
             $today = nad_jp_date('','Y-m-d');
-            if(nad_jp_date($channel->pubDate,'Y-m-d')==$today) { // Existing channel nad_jp_date($channel->pubDate,'Y-m-d')==$today
+            if(false) { // Existing channel nad_jp_date($channel->pubDate,'Y-m-d')==$today
 
                 $items = $this->RSS_log_item_model->select_items_by_channel_id($channel_id);
                 if(count($items) <= CONST_RSS_MANGA_ITEM_NUM && $this->unique_manga_id($items,$manga_id)) { // Checkpoint of the limit of manga
@@ -266,7 +266,7 @@ class Ad_modify_rss extends CI_Controller{
         $channel = $this->RSS_log_channel_model->select_latest_channel();
         $channel_id = $this->RSS_log_channel_model->select_latest_channel_id();
         $today = nad_jp_date('','Y-m-d');
-        if(nad_jp_date($channel->pubDate,'Y-m-d')==$today){
+        if(true){
             $item_data['log_channel_id'] = $channel_id;
             if($this->RSS_log_item_model->update_manga($item_data,$manga_id)){
                 $xml = $this->get_rss_xml($channel_id,$channel);
