@@ -49,6 +49,13 @@ class Batch extends CI_Controller {
                 unset($_SESSION['admin_control']);
             }
 
+            if(isset($_SESSION['new_register'])) {
+                unset($_SESSION['new_register']);
+            }
+            if(isset($_SESSION['new_update'])) {
+                unset($_SESSION['new_update']);
+            }
+
         }
 
     }
@@ -147,17 +154,22 @@ class Batch extends CI_Controller {
                 $manga_id_tags[$item['id']][$key]['tags_name'] = $item['tags_name'];
             }
 
+            $age_manga = $this->Manga_model->select_all_age_manga();
+
             foreach($manga_id_tags as $manga_id=>$manga_tags){
 
-                $tags = manga_tag_sort($manga_id,$manga_tags); //Sort the manga tags
-                $tags_condition = manga_tag_condition($manga_id,$tags); //Get the condition for manga tags.
+                $tags = manga_tag_sort($manga_id,$manga_tags); 
+                $tags_condition = manga_tag_condition($manga_id,$tags);
                 
-                unset($tags); //Clear for another manga
+                //Clear for another manga
+                unset($tags); 
 
-                $related_manga_tags_col = $this->Manga_model->select_related_manga_for_tags($tags_condition); //Manga collection of the related tag
+                //Manga collection of the related tag
+                $related_manga_tags_col = $this->get_related_manga($age_manga,$tags_condition); 
 
-                $item_by_manga_id[$manga_id] = $this->search_item_by_manga_id($item_data,['guid'=>$manga_id]); //Create new item data by related manga id 
-                
+                //Create new item data by related manga id 
+                $item_by_manga_id[$manga_id] = $this->search_item_by_manga_id($item_data,['guid'=>$manga_id]); 
+
                 // Adding Related Link data
                 foreach($related_manga_tags_col as $related_manga) {
 
@@ -202,6 +214,7 @@ class Batch extends CI_Controller {
             }
             $xml.='</channel>';
             $channel_data['RSS_XML'] = $xml;
+
             return [
                 'channel_data' => $channel_data,
                 'item_data' => $item_by_manga_id
@@ -225,6 +238,25 @@ class Batch extends CI_Controller {
         }
 
         return $result[0]; // Return the only one manga which is matched for passing manga id
+    }
+
+    private function get_related_manga($age_manga,$tags_condition) {
+
+        foreach($tags_condition as $condition) {
+            for($manga_count=0;$manga_count < $condition['manga_limit'];$manga_count++){
+                if($condition['manga_id'] != $age_manga[$condition['tags_id']][$manga_count]) {
+                    
+                    $manga_condition = [
+                        'tags_id' => $condition['tags_id'],
+                        'manga_id' => $age_manga[$condition['tags_id']][$manga_count]
+                    ];
+                    
+                    $result[] = $this->Manga_model->select_manga_by_tags_condition($manga_condition);
+                }
+            }
+        } 
+        
+        return $result;
     }
 
     

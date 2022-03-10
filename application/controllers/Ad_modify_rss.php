@@ -20,13 +20,22 @@ class Ad_modify_rss extends CI_Controller{
 
     public function index() {
 
+        $manga_detail_url_str = "/admin/ad_modify_rss/detail/";
+        $manga_detail_url = site_url($manga_detail_url_str);
+
         $channel = $this->RSS_log_channel_model->select_latest_channel();
         $channel_id = get_channel_id($channel);
-        $newly_registered_items = $this->RSS_log_item_model->select_latest_items($channel_id);
+        if(isset($_SESSION['admin_control'])) {
+            $newly_registered_items = $this->RSS_log_item_model->select_latest_items($channel_id);
+        }else{
+            $newly_registered_items = null;
+        }
 
         $view_data['release_date'] = nad_jp_date('','Y-m-d').' '.nad_jp_date('','Y-m-d',$end_date=true);
         $view_data['newly_registered_items'] = $newly_registered_items;
-
+        $view_data['manga_detail_url'] = $manga_detail_url;
+        // echo '<pre>';
+        // var_dump($newly_registered_items);die();
         $this->load->view('rss/item_lists',$view_data);
     }
 
@@ -124,7 +133,7 @@ class Ad_modify_rss extends CI_Controller{
     }
 
     public function register() {
-
+        // unset($_SESSION['new_register']); die();
         if(!$this->input->post('manga_register')){
             echo "You don't have access to this route";
             die();
@@ -196,10 +205,13 @@ class Ad_modify_rss extends CI_Controller{
             
             
             if(isset($_SESSION['admin_control']) && $_SESSION['admin_control'] == true) { // Existing channel
-
+                
                 $items = $this->RSS_log_item_model->select_items_by_channel_id($channel_id);
                 if(count($items) <= CONST_RSS_MANGA_ITEM_NUM && $this->unique_manga_id($items,$manga_id)) { // Checkpoint of the limit of manga
                     
+                    if(isset($_SESSION['new_register'])){
+                        $_SESSION['new_register'][count($_SESSION['new_register'])] = $manga_id;
+                    }
                     if($this->RSS_log_item_model->create_rss($item_data,$channel_id)) { //insert into item table
 
                         $xml = $this->get_rss_xml($channel_id,$channel);
@@ -218,7 +230,11 @@ class Ad_modify_rss extends CI_Controller{
                 }
                 
             }else { // New Channel
-                $this->session->set_tempdata('admin_control',true,86400);//Mark this action is done by admin to work with other update,delete operation.
+                if(!isset($_SESSION['admin_control'])) { //Not to duplicate session
+                    $this->session->set_tempdata('admin_control',true,86400);//Mark this action is done by admin to work with other update,delete operation.
+                }
+                $new_register_sess[] = $manga_id;
+                $this->session->set_tempdata('new_register',$new_register_sess,86400);
 
                 $channel_data = $this->new_channel($channel_id,$item_data);
 
@@ -269,7 +285,20 @@ class Ad_modify_rss extends CI_Controller{
 
         $channel = $this->RSS_log_channel_model->select_latest_channel();
         $channel_id = get_channel_id($channel);
-        if(isset($_SESSION['admin_control']) && $_SESSION['admin_control'] == true){
+        if(isset($_SESSION['admin_control']) && $_SESSION['admin_control'] == true){ //Existing channel
+            if(isset($_SESSION['new_update'])){
+                $_SESSION['new_update'][count($_SESSION['new_update'])] = $manga_id;
+                if(isset($_SESSION['new_register'])){
+                    if($key = array_search($manga_id,$_SESSION['new_register'],true)) {
+                        echo 'hi';
+                        \array_splice($_SESSION['new_register'],$key,1);
+                    }
+                }
+            }else{
+                $new_update_sess[] = $manga_id;
+                $this->session->set_tempdata('new_update',$new_update_sess,86400);
+            }
+            var_dump($_SESSION['new_update']);
             $item_data['log_channel_id'] = $channel_id;
             if($this->RSS_log_item_model->update_manga($item_data,$manga_id)){
                 $xml = $this->get_rss_xml($channel_id,$channel);
@@ -283,8 +312,12 @@ class Ad_modify_rss extends CI_Controller{
                 }
             }
 
-        }else{
+        }else{ // New channel
             $this->session->set_tempdata('admin_control',true,86400);//Mark this action is done by admin to work with other insert,delete operation.
+
+            $new_update_sess[] = $manga_id;
+            $this->session->set_tempdata('new_update',$new_update_sess,86400);
+
             $data[] = $item_data;
             $channel_data = $this->new_channel($channel_id,$data);
 

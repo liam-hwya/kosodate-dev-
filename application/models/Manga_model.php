@@ -81,11 +81,12 @@
         return $this->db->get()->result_array();
     }
 
-    public function select_related_manga_for_tags($tags_condition,$new_manga = false) {
+    public function select_all_age_manga() {
         
-        $manga_for_tags = $this->select_all_manga_for_tags();
-        $organized_manga = $this->organize_manga_for_tags($manga_for_tags);
+        $manga_for_tags = $this->select_all_manga_for_tags(); 
+        $age_manga = $this->organize_manga_for_tags($manga_for_tags);
         
+        return $age_manga;
         foreach($tags_condition as $condition) {
             for($manga_count=0;$manga_count < $condition['manga_limit'];$manga_count++){
                 if($condition['manga_id'] != $organized_manga[$condition['tags_id']][$manga_count]) {
@@ -103,7 +104,7 @@
         return $result;
     }
 
-    private function select_manga_by_tags_condition($condition) {
+    public function select_manga_by_tags_condition($condition) {
     
         $this->db->select('D_MANGA.manga_id');
         $this->db->select('D_MANGA.manga_title');

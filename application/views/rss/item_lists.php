@@ -56,13 +56,33 @@
             <div class="flex">
                 <div>Posted content</div>
                 <div>
-                    <a href="ad_modify_rss/sign_up">sign up</a>
-                    <p><a href="#">newly registered contents</a></p>
+                    <a href="sign_up">sign up</a>
+                    <!-- <?php var_dump($_SESSION['new_register']); ?> -->
+                    <?php if(!is_null($newly_registered_items)): ?>
+                        <?php foreach($newly_registered_items as $key => $item): ?>
+                            <?php if(in_array($item['guid'],$_SESSION['new_register'])): ?>
+                                <p>
+                                    Manga title : <a href="<?= $manga_detail_url.'/'.$item['guid'] ?>"><?= $item['title'] ?></a>
+                                </p>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <br><i>There is no newly registered manga yet.</i><br>
+                    <?php endif; ?>
+
                     <i><a href="ad_modify_rss/modify">Correction or deletion of posted content</a></i>
-                    <p><a href="">Corrected registration content</a></p>
-                    <p><a href="">Corrected registration content</a></p>
-                    <p><a href="">Corrected registration content</a></p>
-                    <p><a href="">Corrected registration content</a></p>
+                    <!-- <?php var_dump($_SESSION['new_update']); ?> -->
+                    <?php if(!is_null($newly_registered_items)): ?>
+                        <?php foreach($newly_registered_items as $key => $item): ?>
+                            <?php if(in_array($item['guid'],$_SESSION['new_update'])): ?>
+                                <p>
+                                    Manga title : <a href="<?= $manga_detail_url.'/'.$item['guid'] ?>"><?= $item['title'] ?></a>
+                                </p>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <br><i>There is no newly registered manga yet.</i><br>
+                    <?php endif; ?>
                 </div>
             </div>
             

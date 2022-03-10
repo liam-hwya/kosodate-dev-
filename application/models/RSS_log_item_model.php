@@ -46,9 +46,8 @@
         $this->db->from('RSS_LOG_ITEM');
         $this->db->where('log_channel_id',$channel_id);
         $this->db->order_by('log_item_id','DESC');
-        $this->db->limit(1);
 
-        return $this->db->get()->row();
+        return $this->db->get()->result_array();
     }
 
     public function search_manga_from_rss($channel_id,$manga) {
