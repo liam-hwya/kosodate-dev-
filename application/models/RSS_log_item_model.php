@@ -21,15 +21,6 @@
         return $this->db->get()->result_array();
     }
 
-    public function select_modified_date($channel_id) {
-
-        $this->db->select('modified_date');
-        $this->db->from('RSS_LOG_ITEM');
-        $this->db->where('log_channel_id',$channel_id);
-        
-        return $this->db->get()->result_array();
-    }
-
     public function select_count($channel_id) {
 
         $this->db->select('count(*)');

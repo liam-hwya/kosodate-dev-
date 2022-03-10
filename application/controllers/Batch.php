@@ -45,6 +45,10 @@ class Batch extends CI_Controller {
                 echo "See the feed <a href=".RSS_FEED_LINK." >Here</a>";
             };
 
+            if(isset($_SESSION['admin_control'])) {
+                unset($_SESSION['admin_control']);
+            }
+
         }
 
     }
@@ -142,7 +146,7 @@ class Batch extends CI_Controller {
                 $manga_id_tags[$item['id']][$key]['tags_id'] = $item['tags_id']; 
                 $manga_id_tags[$item['id']][$key]['tags_name'] = $item['tags_name'];
             }
-            
+
             foreach($manga_id_tags as $manga_id=>$manga_tags){
 
                 $tags = manga_tag_sort($manga_id,$manga_tags); //Sort the manga tags
