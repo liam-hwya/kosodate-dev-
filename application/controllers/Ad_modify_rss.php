@@ -23,6 +23,12 @@ class Ad_modify_rss extends CI_Controller{
         $manga_detail_url_str = "/admin/ad_modify_rss/detail/";
         $manga_detail_url = site_url($manga_detail_url_str);
 
+        $manga_execute_url_str = "/admin/ad_modify_rss/execute";
+        $manga_execute_url = site_url($manga_execute_url_str);
+
+        $manga_signup_url_str = "/admin/ad_modify_rss/sign_up";
+        $manga_signup_url = site_url($manga_signup_url_str);
+
         $channel = $this->RSS_log_channel_model->select_latest_channel();
         $channel_id = get_channel_id($channel);
         if(isset($_SESSION['admin_control'])) {
@@ -34,8 +40,9 @@ class Ad_modify_rss extends CI_Controller{
         $view_data['release_date'] = nad_jp_date('','Y-m-d').' '.nad_jp_date('','Y-m-d',$end_date=true);
         $view_data['newly_registered_items'] = $newly_registered_items;
         $view_data['manga_detail_url'] = $manga_detail_url;
-        // echo '<pre>';
-        // var_dump($newly_registered_items);die();
+        $view_data['manga_execute_url'] = $manga_execute_url;
+        $view_data['manga_signup_url'] = $manga_signup_url;
+        
         $this->load->view('rss/item_lists',$view_data);
     }
 
@@ -101,6 +108,7 @@ class Ad_modify_rss extends CI_Controller{
         if(empty($manga_detail)) {
             $manga_detail = null;
         }
+
         $manga_media = $this->Manga_model->select_manga_media($index);
         $manga_tags = $this->Manga_model->select_tags_for_manga($index);
         // var_dump($manga_detail);die();
@@ -112,11 +120,12 @@ class Ad_modify_rss extends CI_Controller{
         if(!empty($manga_tags)){
             $tags = manga_tag_sort($index,$manga_tags); //Sort the manga tags
             $tags_condition = manga_tag_condition($index,$tags); //Get the condition for manga tags.
-            $related_manga = $this->Manga_model->select_related_manga_for_tags($tags_condition);
+            $age_manga = $this->Manga_model->select_all_age_manga();
+            $related_manga = get_related_manga($age_manga,$tags_condition); 
         }else{
             $related_manga = null;
         }
-        
+
         $view_data['manga_detail'] = $manga_detail;
         $view_data['manga_media'] = $manga_media;
         $view_data['manga_id'] = $index;
@@ -133,7 +142,7 @@ class Ad_modify_rss extends CI_Controller{
     }
 
     public function register() {
-        // unset($_SESSION['new_register']); die();
+        
         if(!$this->input->post('manga_register')){
             echo "You don't have access to this route";
             die();
@@ -146,6 +155,7 @@ class Ad_modify_rss extends CI_Controller{
             $author = $this->Manga_model->select_mangaka_for_manga($manga_id);
             $manga_media = $this->Manga_model->select_manga_media($manga_id);
             $manga_tags = $this->Manga_model->select_tags_for_manga($manga_id);
+
             if(!empty($manga_tags)){
                 $tags = manga_tag_sort($manga_id,$manga_tags); //Sort the manga tags
                 $tags_condition = manga_tag_condition($manga_id,$tags); //Get the condition for manga tags.
@@ -196,56 +206,70 @@ class Ad_modify_rss extends CI_Controller{
                     $rss_manga['relatedlink'] .= '<relatedlink title="'.$manga['manga_title'].'" link="'.MANGA_URL.$manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$manga['img_url'].'"/>';
                 }
             }
-            
-            $item_data[] = $rss_manga;
 
-            // Checkpoint of new channel
             $channel = $this->RSS_log_channel_model->select_latest_channel();
             $channel_id = get_channel_id($channel);
-            
-            
-            if(isset($_SESSION['admin_control']) && $_SESSION['admin_control'] == true) { // Existing channel
-                
-                $items = $this->RSS_log_item_model->select_items_by_channel_id($channel_id);
-                if(count($items) <= CONST_RSS_MANGA_ITEM_NUM && $this->unique_manga_id($items,$manga_id)) { // Checkpoint of the limit of manga
-                    
-                    if(isset($_SESSION['new_register'])){
-                        $_SESSION['new_register'][count($_SESSION['new_register'])] = $manga_id;
-                    }
-                    if($this->RSS_log_item_model->create_rss($item_data,$channel_id)) { //insert into item table
-
-                        $xml = $this->get_rss_xml($channel_id,$channel);
-
-                        $updated_data = [
-                            'RSS_XML' => $xml,
-                            'last_time2' => nad_jp_date()
-                        ];
-                        if($this->RSS_log_channel_model->update_channel($channel_id,$updated_data)) {
-                            echo "Updated";
-                        }
-                    }
-
-                }else{
-                    echo "Can't insert the manga. Manga is full or the manga with this id is already exists.";die();
+            $items = $this->RSS_log_item_model->select_items_by_channel_id($channel_id);
+            if(count($items) <= CONST_RSS_MANGA_ITEM_NUM && $this->unique_manga_id($items,$manga_id)) {
+                if(isset($_SESSION['register_manga'])) {
+                    $_SESSION['register_manga'][$manga_id] = $rss_manga;
+                }else {
+                    $register_manga[$manga_id] = $rss_manga;
+                    $this->session->set_userdata('register_manga',$register_manga); 
                 }
-                
-            }else { // New Channel
-                if(!isset($_SESSION['admin_control'])) { //Not to duplicate session
-                    $this->session->set_tempdata('admin_control',true,86400);//Mark this action is done by admin to work with other update,delete operation.
-                }
-                $new_register_sess[] = $manga_id;
-                $this->session->set_tempdata('new_register',$new_register_sess,86400);
-
-                $channel_data = $this->new_channel($channel_id,$item_data);
-
-                $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
-    
-                if ($this->RSS_log_item_model->create_rss($item_data, $new_channel_id)) {
-                    echo "Inserted";
-                    die();
-                }
-
             }
+
+            echo'<pre>'; 
+            var_dump($_SESSION['register_manga']); die();
+            // end
+
+            // Checkpoint of new channel
+            // $channel = $this->RSS_log_channel_model->select_latest_channel();
+            // $channel_id = get_channel_id($channel);
+            
+            
+            // if(isset($_SESSION['admin_control']) && $_SESSION['admin_control'] == true) { // Existing channel
+                
+            //     $items = $this->RSS_log_item_model->select_items_by_channel_id($channel_id);
+            //     if(count($items) <= CONST_RSS_MANGA_ITEM_NUM && $this->unique_manga_id($items,$manga_id)) { // Checkpoint of the limit of manga
+                    
+            //         if(isset($_SESSION['new_register'])){
+            //             $_SESSION['new_register'][count($_SESSION['new_register'])] = $manga_id;
+            //         }
+            //         if($this->RSS_log_item_model->create_rss($item_data,$channel_id)) { //insert into item table
+
+            //             $xml = $this->get_rss_xml($channel_id,$channel);
+
+            //             $updated_data = [
+            //                 'RSS_XML' => $xml,
+            //                 'last_time2' => nad_jp_date()
+            //             ];
+            //             if($this->RSS_log_channel_model->update_channel($channel_id,$updated_data)) {
+            //                 echo "Updated";
+            //             }
+            //         }
+
+            //     }else{
+            //         echo "Can't insert the manga. Manga is full or the manga with this id is already exists.";die();
+            //     }
+                
+            // }else { // New Channel
+            //     if(!isset($_SESSION['admin_control'])) { //Not to duplicate session
+            //         $this->session->set_tempdata('admin_control',true,86400);//Mark this action is done by admin to work with other update,delete operation.
+            //     }
+            //     $new_register_sess[] = $manga_id;
+            //     $this->session->set_tempdata('new_register',$new_register_sess,86400);
+
+                // $channel_data = $this->new_channel($channel_id,$item_data);
+
+                // $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
+    
+                // if ($this->RSS_log_item_model->create_rss($item_data, $new_channel_id)) {
+                //     echo "Inserted";
+                //     die();
+                // }
+
+            // }
 
         }
     }
@@ -260,16 +284,16 @@ class Ad_modify_rss extends CI_Controller{
         $related_manga = $this->input->post('related_manga');
         
         $manga_id = $manga['guid'];
-        $item_data['guid'] = $manga['guid'];
-        $item_data['title'] = $manga['title'];
-        $item_data['link'] = $manga['link'];
-        $item_data['category'] = $manga['category'];
-        $item_data['description'] = $manga['description'];
-        $item_data['encoded'] = $manga['encoded'];
-        $item_data['thumbnail'] = $manga['img_url']['thumbnail'];
-        $item_data['enclosure'] = $manga['img_url']['enclosure'][0];
-        $item_data['delete'] = $manga['delete'];
-        $item_data['pubDate'] = $manga['pubDate'];
+        $rss_manga['guid'] = $manga['guid'];
+        $rss_manga['title'] = $manga['title'];
+        $rss_manga['link'] = $manga['link'];
+        $rss_manga['category'] = $manga['category'];
+        $rss_manga['description'] = $manga['description'];
+        $rss_manga['encoded'] = $manga['encoded'];
+        $rss_manga['thumbnail'] = $manga['img_url']['thumbnail'];
+        $rss_manga['enclosure'] = $manga['img_url']['enclosure'][0];
+        $rss_manga['delete'] = $manga['delete'];
+        $rss_manga['pubDate'] = $manga['pubDate'];
 
         $relatedlink = '';
         if (!is_null($related_manga)) {
@@ -277,58 +301,124 @@ class Ad_modify_rss extends CI_Controller{
                 $relatedlink .= '<relatedlink title="'.$manga['manga_title'].'" link="'.MANGA_URL.$manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$manga['img_url'].'"/>';
             }
         }
-        $item_data['relatedlink'] = $relatedlink;
+        $rss_manga['relatedlink'] = $relatedlink;
         
-        $item_data['modifiedDate'] = nad_jp_date();
-        $item_data['pubDate'] = nad_jp_date();
-        $item_data['last_time'] = nad_jp_date();
+        $rss_manga['modifiedDate'] = nad_jp_date();
+        $rss_manga['pubDate'] = nad_jp_date();
+        $rss_manga['last_time'] = nad_jp_date();
+
+        // Set data in session
+        if(isset($_SESSION['update_manga'])) {
+            $_SESSION['update_manga'][$manga_id] = $rss_manga;
+        }else {
+            $update_manga[$manga_id] = $rss_manga;
+            $this->session->set_userdata('update_manga',$update_manga); 
+        }
+        
+        echo'<pre>'; 
+        var_dump($_SESSION['update_manga']); die();
+
+        /// end
+
+        // $channel = $this->RSS_log_channel_model->select_latest_channel();
+        // $channel_id = get_channel_id($channel);
+        // if(isset($_SESSION['admin_control']) && $_SESSION['admin_control'] == true){ //Existing channel
+        //     if(isset($_SESSION['new_update'])){
+        //         $_SESSION['new_update'][count($_SESSION['new_update'])] = $manga_id;
+        //         if(isset($_SESSION['new_register'])){
+        //             if($key = array_search($manga_id,$_SESSION['new_register'],true)) {
+        //                 echo 'hi';
+        //                 \array_splice($_SESSION['new_register'],$key,1);
+        //             }
+        //         }
+        //     }else{
+        //         $new_update_sess[] = $manga_id;
+        //         $this->session->set_tempdata('new_update',$new_update_sess,86400);
+        //     }
+        //     var_dump($_SESSION['new_update']);
+        //     $item_data['log_channel_id'] = $channel_id;
+        //     if($this->RSS_log_item_model->update_manga($item_data,$manga_id)){
+        //         $xml = $this->get_rss_xml($channel_id,$channel);
+
+        //         $updated_data = [
+        //             'RSS_XML' => $xml,
+        //             'last_time2' => nad_jp_date()
+        //         ];
+        //         if($this->RSS_log_channel_model->update_channel($channel_id,$updated_data)) {
+        //             echo "Updated";
+        //         }
+        //     }
+
+        // }else{ // New channel
+        //     $this->session->set_tempdata('admin_control',true,86400);//Mark this action is done by admin to work with other insert,delete operation.
+
+        //     $new_update_sess[] = $manga_id;
+        //     $this->session->set_tempdata('new_update',$new_update_sess,86400);
+
+        //     $data[] = $item_data;
+        //     $channel_data = $this->new_channel($channel_id,$data);
+
+        //     $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
+        //     $item_data['log_channel_id'] = $new_channel_id;
+        //     if ($this->RSS_log_item_model->update_manga($item_data, $manga_id)) {
+        //         echo 'ok';
+        //     }
+            
+
+        // }
+
+    }
+
+    public function execute() {
+
+        if(!$this->input->post('execute_manga')){
+            echo "You don't have access to this route";
+            die();
+        }
+        echo '<pre>';
+
+        if(isset($_SESSION['register_manga'])) {
+            $register_manga = $_SESSION['register_manga'];
+            // var_dump($register_manga);
+            // $channel_data = $this->new_channel($channel_id,$item_data);
+            // $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
+            // if ($this->RSS_log_item_model->create_rss($item_data, $new_channel_id)) {
+                
+            //     unset($item_data);
+            //     unset($_SESSION['register_manga']);
+            // }
+        }
+
+        if(isset($_SESSION['update_manga'])) {
+            $update_manga = $_SESSION['update_manga'];
+            // var_dump($update_manga);
+            // $channel_data = $this->new_channel($channel_id,$data);
+
+            // $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
+            // $item_data['log_channel_id'] = $new_channel_id;
+            // if ($this->RSS_log_item_model->update_manga($item_data, $manga_id)) {
+            //     echo 'ok';
+            // }
+        }
+        // var_dump($register_manga); var_dump($update_manga); die();
+
+        $item_data = array_merge($register_manga,$update_manga);
 
         $channel = $this->RSS_log_channel_model->select_latest_channel();
         $channel_id = get_channel_id($channel);
-        if(isset($_SESSION['admin_control']) && $_SESSION['admin_control'] == true){ //Existing channel
-            if(isset($_SESSION['new_update'])){
-                $_SESSION['new_update'][count($_SESSION['new_update'])] = $manga_id;
-                if(isset($_SESSION['new_register'])){
-                    if($key = array_search($manga_id,$_SESSION['new_register'],true)) {
-                        echo 'hi';
-                        \array_splice($_SESSION['new_register'],$key,1);
-                    }
-                }
-            }else{
-                $new_update_sess[] = $manga_id;
-                $this->session->set_tempdata('new_update',$new_update_sess,86400);
-            }
-            var_dump($_SESSION['new_update']);
-            $item_data['log_channel_id'] = $channel_id;
-            if($this->RSS_log_item_model->update_manga($item_data,$manga_id)){
-                $xml = $this->get_rss_xml($channel_id,$channel);
+        $channel_data = $this->new_channel($channel_id,$item_data);
+        $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
 
-                $updated_data = [
-                    'RSS_XML' => $xml,
-                    'last_time2' => nad_jp_date()
-                ];
-                if($this->RSS_log_channel_model->update_channel($channel_id,$updated_data)) {
-                    echo "Updated";
-                }
-            }
-
-        }else{ // New channel
-            $this->session->set_tempdata('admin_control',true,86400);//Mark this action is done by admin to work with other insert,delete operation.
-
-            $new_update_sess[] = $manga_id;
-            $this->session->set_tempdata('new_update',$new_update_sess,86400);
-
-            $data[] = $item_data;
-            $channel_data = $this->new_channel($channel_id,$data);
-
-            $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
-            $item_data['log_channel_id'] = $new_channel_id;
-            if ($this->RSS_log_item_model->update_manga($item_data, $manga_id)) {
-                echo 'ok';
-            }
-            
-
+        $this->RSS_log_item_model->create_rss($register_manga, $new_channel_id);
+    
+        foreach($update_manga as $id=>$manga) {
+            $update_manga[$id]['log_channel_id'] = $new_channel_id;
         }
+        $this->RSS_log_item_model->update_manga($update_manga);
+        
+        var_dump($channel_data);
+        die();
+        // $item_data = 
 
     }
 

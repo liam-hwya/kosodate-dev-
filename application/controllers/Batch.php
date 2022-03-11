@@ -45,15 +45,12 @@ class Batch extends CI_Controller {
                 echo "See the feed <a href=".RSS_FEED_LINK." >Here</a>";
             };
 
-            if(isset($_SESSION['admin_control'])) {
-                unset($_SESSION['admin_control']);
+            if(isset($_SESSION['register_manga'])) {
+                unset($_SESSION['register_manga']);
             }
 
-            if(isset($_SESSION['new_register'])) {
-                unset($_SESSION['new_register']);
-            }
-            if(isset($_SESSION['new_update'])) {
-                unset($_SESSION['new_update']);
+            if(isset($_SESSION['update_manga'])) {
+                unset($_SESSION['update_manga']);
             }
 
         }
@@ -87,7 +84,7 @@ class Batch extends CI_Controller {
                     $item_data[$key]['link'] = MANGA_URL.$manga_item['id'];
                     $item_data[$key]['guid'] = $manga_item['id'];
                     $item_data[$key]['category'] = '<![CDATA[ママコマ漫画]]>';
-                    $item_data[$key]['description'] = "こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。".$manga_item['author']."～「".$manga_item['title']."」をお楽しみください。";
+                    $item_data[$key]['description'] = CONST_HEADER_META_DESCRIPTION.$manga_item['author']."～「".$manga_item['title']."」をお楽しみください。";
                     $item_data[$key]['pubDate'] = nad_jp_date();
                     $item_data[$key]['modifiedDate'] = null;
                     $item_data[$key]['delete'] = null;
@@ -165,7 +162,7 @@ class Batch extends CI_Controller {
                 unset($tags); 
 
                 //Manga collection of the related tag
-                $related_manga_tags_col = $this->get_related_manga($age_manga,$tags_condition); 
+                $related_manga_tags_col = get_related_manga($age_manga,$tags_condition); 
 
                 //Create new item data by related manga id 
                 $item_by_manga_id[$manga_id] = $this->search_item_by_manga_id($item_data,['guid'=>$manga_id]); 
@@ -237,28 +234,8 @@ class Batch extends CI_Controller {
             $result[] = $item;
         }
 
-        return $result[0]; // Return the only one manga which is matched for passing manga id
-    }
-
-    private function get_related_manga($age_manga,$tags_condition) {
-
-        foreach($tags_condition as $condition) {
-            for($manga_count=0;$manga_count < $condition['manga_limit'];$manga_count++){
-                if($condition['manga_id'] != $age_manga[$condition['tags_id']][$manga_count]) {
-                    
-                    $manga_condition = [
-                        'tags_id' => $condition['tags_id'],
-                        'manga_id' => $age_manga[$condition['tags_id']][$manga_count]
-                    ];
-                    
-                    $result[] = $this->Manga_model->select_manga_by_tags_condition($manga_condition);
-                }
-            }
-        } 
-        
-        return $result;
-    }
-
-    
+        // Return the only one manga which is matched for passing manga id
+        return $result[0]; 
+    }    
 }
 

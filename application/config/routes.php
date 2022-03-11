@@ -64,3 +64,4 @@ $route['admin/ad_modify_rss/modify'] = 'Ad_modify_rss/modify';
 $route['admin/ad_modify_rss/detail/(:num)'] = 'Ad_modify_rss/detail/$1';
 $route['admin/ad_modify_rss/register'] = 'Ad_modify_rss/register';
 $route['admin/ad_modify_rss/update'] = 'Ad_modify_rss/update';
+$route['admin/ad_modify_rss/execute'] = 'Ad_modify_rss/execute';

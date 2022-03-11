@@ -63,10 +63,13 @@
         return $sql->result_array();
     }
 
-    public function update_manga($update_data,$manga_id) {
+    public function update_manga($data) {
 
-        $this->db->where('guid',$manga_id);
-        $this->db->update('RSS_LOG_ITEM',$update_data);
+        foreach($data as $manga_id => $rss_item) {
+
+            $this->db->where('guid',$manga_id);
+            $this->db->update('RSS_LOG_ITEM',$rss_item);
+        }
 
         return true;
     }

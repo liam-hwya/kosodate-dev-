@@ -104,6 +104,101 @@
         return $result;
     }
 
+    public function select_related_manga_for_tags($tags_condition,$new_manga = false) {
+        if ($tags_condition) {
+            $manga_result = [];
+            foreach ($tags_condition as $condition) {
+                
+                $this->db->select('D_MANGA.manga_id');
+                $this->db->select('D_MANGA.manga_title');
+                $this->db->select('D_MEDIA_1.media_url AS img_url');
+                $this->db->select('D_TAGS.tags_id');
+                $this->db->from('D_MANGA');
+                $this->db->join('D_MEDIA AS D_MEDIA_1', 'D_MANGA.manga_icon_media_id = D_MEDIA_1.media_id', 'left');
+                $this->db->join('D_TAGS_MANGA', 'D_MANGA.manga_id = D_TAGS_MANGA.manga_id', 'left');
+                $this->db->join('D_TAGS', 'D_TAGS_MANGA.tags_id = D_TAGS.tags_id', 'left');
+                $this->db->where('D_TAGS.tags_id', $condition['tags_id']);
+                $this->db->where('D_MANGA.manga_id !=', $condition['manga_id']);
+                $this->db->group_by('D_MANGA.manga_id');
+                $this->db->order_by('D_TAGS_MANGA.tags_id', 'DESC');
+                $this->db->order_by('D_MANGA.manga_date', 'DESC');
+                if(isset($condition['offset'])){
+                    $this->db->limit($condition['manga_limit'],$condition['offset']);
+                }else{
+                    $this->db->limit($condition['manga_limit']);
+                }
+                
+                if ($new_manga) {
+                    $result = $this->db->get()->result_array();
+                    return $result;
+                }
+
+                $result[] = $this->db->get()->result_array();
+            }
+        }
+
+        $manga_result = $this->group_manga($result);
+
+        
+        $manga_result = $this->check_unique_manga($manga_result,$tags_condition);
+
+        return $manga_result;
+
+    }
+
+    private function group_manga($manga_result) {
+
+        // consolidation of the result as an array
+        foreach($manga_result as $row){
+          
+            if(count($row) != count($row,COUNT_RECURSIVE)) {
+                foreach($row as $nested_row){
+                    $result[] = $nested_row;
+                }
+            }else{
+                $result[] = $row;
+            }
+        }
+        
+        return $result;
+    }
+        
+
+    public function check_unique_manga($manga_result,$tags_condition) {
+
+        $uniq_manga_id = [];
+        $offset_add = 0;
+        
+        // var_dump($manga_result);die();
+        foreach($manga_result as $key=>$manga){
+            
+
+            if(!in_array($manga['manga_id'],$uniq_manga_id)){
+                $uniq_manga_id[] = $manga['manga_id'];
+            }else{
+                $offset = $this->get_related_manga_limit($tags_condition,['tags_id' => $manga['tags_id']]);
+                
+                do {
+                    $offset_add ++;
+                    $another_manga = $this->select_related_manga_for_tags($condition = [
+                                        ['manga_id'=> $manga['manga_id'],
+                                        'tags_id' => $manga['tags_id'],
+                                        'manga_limit' => 1,
+                                        'offset' => $offset+$offset_add
+                                        ]
+                                    ], $new_manga = true);
+                                    
+                }while(in_array($another_manga[0]['manga_id'],$uniq_manga_id));
+                
+                unset($manga_result[$key]);
+                $manga_result[$key] = $another_manga[0];
+            }
+        }
+        
+        return $manga_result;
+
+    }
+
     public function select_manga_by_tags_condition($condition) {
     
         $this->db->select('D_MANGA.manga_id');
@@ -179,6 +274,9 @@
         $this->db->select('D_MANGAKA.mangaka_nickname AS author');
         $this->db->from('d_manga');
         $this->db->join('D_MANGAKA','D_MANGA.mangaka_id = D_MANGAKA.mangaka_id','left');
+        $this->db->where('D_MANGA.manga_deleted',NO_DELETE_FLAG);
+        $this->db->where('D_MANGA.manga_state_code',CONST_MANGA_STATE_CODE_PUBLIC);
+        $this->db->where('D_MANGAKA.mangaka_state_code',CONST_MANGAKA_STATE_CODE_SHOW);
         $this->db->where('manga_id',$manga_id);
 
         return $this->db->get()->row();
