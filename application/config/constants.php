@@ -92,8 +92,10 @@ define('CONST_COMMON_STATE_CODE_VALID', 1);
 define('CONST_RSS_MANGA_ITEM_NUM', 30);
 define('KOSODATE_IMG_URL','https://t-img001.kosodatedays.com/');
 define('MANGA_URL','https://www.kosodatedays.com/manga/');
+define('KOSODATE_T_URL','https://t-www.kosodatedays.com/');
 
 // These CONSTANTS are defined in here.
+define('ZERO_YEAR_OLD_TAG_AGE_NAME','0歳');
 define('ONE_YEAR_OLD_TAG_AGE_NAME','1歳');
 define('TWO_YEAR_OLD_TAG_AGE_NAME','2歳');
 define('THREE_YEAR_OLD_TAG_AGE_NAME','3歳');
@@ -101,6 +103,7 @@ define('FOUR_YEAR_OLD_TAG_AGE_NAME','4歳');
 define('FIVE_YEAR_OLD_TAG_AGE_NAME','5歳');
 define('SIX_YEAR_OLD_TAG_AGE_NAME','6歳');
 
+define('ZERO_YEAR_OLD_TAG_AGE',0);
 define('ONE_YEAR_OLD_TAG_AGE',1);
 define('TWO_YEAR_OLD_TAG_AGE',2);
 define('THREE_YEAR_OLD_TAG_AGE',3);

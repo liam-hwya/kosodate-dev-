@@ -12,7 +12,7 @@ if (!function_exists('nad_jp_date')) {
     function nad_jp_date($date = '', $format = 'Y-m-d H:i:s', $end_date = false) {
 
         if(is_null($date)) {
-            return null;
+            return NULL;
         }
 
         if (empty($date)) {
@@ -21,13 +21,15 @@ if (!function_exists('nad_jp_date')) {
         $timezone = 'Asia/Tokyo';
 
         $t = new DateTime($date);
+        // var_dump($t); die();
         $t->setTimezone(new DateTimeZone($timezone));
         if($end_date) {
             
             return ($format)? $t->format('Y-m-t') : $t->format('Y-m-t 23:59:59');
         }else{
             if($format == 'RFC822'){
-                return gmdate(DATE_RFC822,$t->getTimestamp());
+                // return gmdate(DATE_RFC822,$t->getTimestamp());
+                return $t->format("r");
             }else{
                 return $t->format($format);
             }

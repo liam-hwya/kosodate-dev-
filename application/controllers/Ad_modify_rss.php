@@ -175,17 +175,17 @@ class Ad_modify_rss extends CI_Controller{
             $rss_manga['description'] = "こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。".$manga->author."～「".$manga->manga_title."」をお楽しみください。";
             $rss_manga['pubDate'] = nad_jp_date();
             $rss_manga['modifiedDate'] = null;
-            $rss_manga['delete'] = null;
+            $rss_manga['delete'] = 0;
             $rss_manga['enclosure'] = (empty($manga_media[0]['img_url']))? '':KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
             $rss_manga['thumbnail'] = (empty($manga_media[0]['img_url']))? '':KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
 
             // Encoded tags
-            $rss_manga['encoded'] = '<![CDATA[<p>体験談投稿</p><p>'.$manga->story_name.'</p>';
+            $rss_manga['encoded'] = '<![CDATA[<p>体験談投稿'.$manga->story_name;
             if(!empty($manga->story_mama_year_old)){
-                $rss_manga['encoded'] .= '<p>'.$manga->story_mama_year_old.'</p>';
+                $rss_manga['encoded'] .= $manga->story_mama_year_old.'<br>';
             }
             if(!empty($manga->story_childs_year_old)){
-                $rss_manga['encoded'] .= '<p>お子さん</p><p>'.$manga->story_childs_year_old.'</p>';
+                $rss_manga['encoded'] .= 'お子さん'.$manga->story_childs_year_old.'</p>';
             }
             $rss_manga['encoded'] .= '<p>'.$manga->manga_title.'</p>';          
             $rss_manga['encoded'] .= '<p>'.$manga->manga_intro.'</p>';
@@ -196,6 +196,10 @@ class Ad_modify_rss extends CI_Controller{
             }
 
             $rss_manga['encoded'] .= '</p>';
+            
+            $item_data[$key]['encoded'] .= '<p>イラスト・'.$manga->author.'さん<img src="'.KOSODATE_IMG_SHARE_URL.$manga->mangaka_icon_url.'"/></p>';
+            $item_data[$key]['encoded'] .= '<p>'.$manga->detail.'</p>';
+
             $rss_manga['encoded'] .= $insta_tag."]]>";
 
             // Related Tags
@@ -217,59 +221,10 @@ class Ad_modify_rss extends CI_Controller{
                     $register_manga[$manga_id] = $rss_manga;
                     $this->session->set_userdata('register_manga',$register_manga); 
                 }
+            }else{
+                echo "Can't insert the manga. Manga is full or the manga with this id is already exists.";
+                die();
             }
-
-            echo'<pre>'; 
-            var_dump($_SESSION['register_manga']); die();
-            // end
-
-            // Checkpoint of new channel
-            // $channel = $this->RSS_log_channel_model->select_latest_channel();
-            // $channel_id = get_channel_id($channel);
-            
-            
-            // if(isset($_SESSION['admin_control']) && $_SESSION['admin_control'] == true) { // Existing channel
-                
-            //     $items = $this->RSS_log_item_model->select_items_by_channel_id($channel_id);
-            //     if(count($items) <= CONST_RSS_MANGA_ITEM_NUM && $this->unique_manga_id($items,$manga_id)) { // Checkpoint of the limit of manga
-                    
-            //         if(isset($_SESSION['new_register'])){
-            //             $_SESSION['new_register'][count($_SESSION['new_register'])] = $manga_id;
-            //         }
-            //         if($this->RSS_log_item_model->create_rss($item_data,$channel_id)) { //insert into item table
-
-            //             $xml = $this->get_rss_xml($channel_id,$channel);
-
-            //             $updated_data = [
-            //                 'RSS_XML' => $xml,
-            //                 'last_time2' => nad_jp_date()
-            //             ];
-            //             if($this->RSS_log_channel_model->update_channel($channel_id,$updated_data)) {
-            //                 echo "Updated";
-            //             }
-            //         }
-
-            //     }else{
-            //         echo "Can't insert the manga. Manga is full or the manga with this id is already exists.";die();
-            //     }
-                
-            // }else { // New Channel
-            //     if(!isset($_SESSION['admin_control'])) { //Not to duplicate session
-            //         $this->session->set_tempdata('admin_control',true,86400);//Mark this action is done by admin to work with other update,delete operation.
-            //     }
-            //     $new_register_sess[] = $manga_id;
-            //     $this->session->set_tempdata('new_register',$new_register_sess,86400);
-
-                // $channel_data = $this->new_channel($channel_id,$item_data);
-
-                // $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
-    
-                // if ($this->RSS_log_item_model->create_rss($item_data, $new_channel_id)) {
-                //     echo "Inserted";
-                //     die();
-                // }
-
-            // }
 
         }
     }
@@ -314,58 +269,6 @@ class Ad_modify_rss extends CI_Controller{
             $update_manga[$manga_id] = $rss_manga;
             $this->session->set_userdata('update_manga',$update_manga); 
         }
-        
-        echo'<pre>'; 
-        var_dump($_SESSION['update_manga']); die();
-
-        /// end
-
-        // $channel = $this->RSS_log_channel_model->select_latest_channel();
-        // $channel_id = get_channel_id($channel);
-        // if(isset($_SESSION['admin_control']) && $_SESSION['admin_control'] == true){ //Existing channel
-        //     if(isset($_SESSION['new_update'])){
-        //         $_SESSION['new_update'][count($_SESSION['new_update'])] = $manga_id;
-        //         if(isset($_SESSION['new_register'])){
-        //             if($key = array_search($manga_id,$_SESSION['new_register'],true)) {
-        //                 echo 'hi';
-        //                 \array_splice($_SESSION['new_register'],$key,1);
-        //             }
-        //         }
-        //     }else{
-        //         $new_update_sess[] = $manga_id;
-        //         $this->session->set_tempdata('new_update',$new_update_sess,86400);
-        //     }
-        //     var_dump($_SESSION['new_update']);
-        //     $item_data['log_channel_id'] = $channel_id;
-        //     if($this->RSS_log_item_model->update_manga($item_data,$manga_id)){
-        //         $xml = $this->get_rss_xml($channel_id,$channel);
-
-        //         $updated_data = [
-        //             'RSS_XML' => $xml,
-        //             'last_time2' => nad_jp_date()
-        //         ];
-        //         if($this->RSS_log_channel_model->update_channel($channel_id,$updated_data)) {
-        //             echo "Updated";
-        //         }
-        //     }
-
-        // }else{ // New channel
-        //     $this->session->set_tempdata('admin_control',true,86400);//Mark this action is done by admin to work with other insert,delete operation.
-
-        //     $new_update_sess[] = $manga_id;
-        //     $this->session->set_tempdata('new_update',$new_update_sess,86400);
-
-        //     $data[] = $item_data;
-        //     $channel_data = $this->new_channel($channel_id,$data);
-
-        //     $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
-        //     $item_data['log_channel_id'] = $new_channel_id;
-        //     if ($this->RSS_log_item_model->update_manga($item_data, $manga_id)) {
-        //         echo 'ok';
-        //     }
-            
-
-        // }
 
     }
 
@@ -379,28 +282,15 @@ class Ad_modify_rss extends CI_Controller{
 
         if(isset($_SESSION['register_manga'])) {
             $register_manga = $_SESSION['register_manga'];
-            // var_dump($register_manga);
-            // $channel_data = $this->new_channel($channel_id,$item_data);
-            // $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
-            // if ($this->RSS_log_item_model->create_rss($item_data, $new_channel_id)) {
-                
-            //     unset($item_data);
-            //     unset($_SESSION['register_manga']);
-            // }
+        }else{
+            $register_manga = [];
         }
 
         if(isset($_SESSION['update_manga'])) {
             $update_manga = $_SESSION['update_manga'];
-            // var_dump($update_manga);
-            // $channel_data = $this->new_channel($channel_id,$data);
-
-            // $new_channel_id = $this->RSS_log_channel_model->create_rss($channel_data);
-            // $item_data['log_channel_id'] = $new_channel_id;
-            // if ($this->RSS_log_item_model->update_manga($item_data, $manga_id)) {
-            //     echo 'ok';
-            // }
+        }else{
+            $update_manga = [];
         }
-        // var_dump($register_manga); var_dump($update_manga); die();
 
         $item_data = array_merge($register_manga,$update_manga);
 
@@ -416,9 +306,8 @@ class Ad_modify_rss extends CI_Controller{
         }
         $this->RSS_log_item_model->update_manga($update_manga);
         
-        var_dump($channel_data);
-        die();
-        // $item_data = 
+        unset($_SESSION['register_manga']);
+        unset($_SESSION['update_manga']);
 
     }
 

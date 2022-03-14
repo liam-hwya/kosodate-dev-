@@ -12,9 +12,13 @@ if (!function_exists('manga_tag_sort')) {
     function manga_tag_sort($manga_id,$manga_tags) {
 
         foreach($manga_tags as $key=>$manga){
-
+            // echo '<pre>'; var_dump($key); die();
             switch ($manga['tags_name']){
                 
+                case ZERO_YEAR_OLD_TAG_AGE_NAME:
+                    $tags[$key]['id'] = $manga['tags_id'];  
+                    $tags[$key]['name'] = ZERO_YEAR_OLD_TAG_AGE;
+                    break;
                 case ONE_YEAR_OLD_TAG_AGE_NAME:
                     $tags[$key]['id'] = $manga['tags_id'];  
                     $tags[$key]['name'] = ONE_YEAR_OLD_TAG_AGE;
@@ -40,7 +44,7 @@ if (!function_exists('manga_tag_sort')) {
                     $tags[$key]['name'] = SIX_YEAR_OLD_TAG_AGE;
                     break;
                 default:
-                    $tags[] = null;
+                    $tags = null;
                     break;
                   
               }
@@ -48,9 +52,12 @@ if (!function_exists('manga_tag_sort')) {
         }
 
         // Sort the age order
-        usort($tags,function($original,$sorted){
-            return $original['name'] > $sorted['name'];
-        });
+        if(!is_null($tags)) {
+            usort($tags,function($original,$sorted){
+                return $original['name'] > $sorted['name'];
+            });
+        }
+        
 
         return $tags;
         
@@ -67,6 +74,10 @@ if (!function_exists('manga_tag_condition')) {
      * @return string
      */
     function manga_tag_condition($manga_id,$tags) {
+
+        if(is_null($tags)) {
+            return null;
+        }
 
         if(count($tags) == ONE_CASE_FOR_AGE){ // Checkpoint for deciding manga limit
 
@@ -130,6 +141,10 @@ if (!function_exists('get_related_manga')) {
      * @return string
      */
     function get_related_manga($age_manga,$tags_condition) {
+
+        if(is_null($tags_condition)) {
+            return null;
+        }
 
         $CI = get_instance();
         $CI->load->model('Manga_model','Manga_model');

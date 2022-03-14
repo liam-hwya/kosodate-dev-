@@ -87,16 +87,18 @@ class Batch extends CI_Controller {
                     $item_data[$key]['description'] = CONST_HEADER_META_DESCRIPTION.$manga_item['author']."～「".$manga_item['title']."」をお楽しみください。";
                     $item_data[$key]['pubDate'] = nad_jp_date();
                     $item_data[$key]['modifiedDate'] = null;
-                    $item_data[$key]['delete'] = null;
+                    $item_data[$key]['delete'] = 0;
                     $item_data[$key]['enclosure'] = KOSODATE_IMG_URL.$manga_item['img_url'];
                     $item_data[$key]['thumbnail'] = KOSODATE_IMG_URL.$manga_item['img_url'];
                     $item_data[$key]['encoded'] = null;
                     $item_data[$key]['relatedlink'] = null;
                     $item_data[$key]['author'] = $manga_item['author'];
+                    $item_data[$key]['mangaka_icon_url'] = $manga_item['mangaka_icon_url'];
                     $item_data[$key]['story_name'] = $manga_item['story_name'];
                     $item_data[$key]['story_mama_year_old'] = $manga_item['story_mama_year_old'];
                     $item_data[$key]['story_childs_year_old'] = $manga_item['story_childs_year_old'];
                     $item_data[$key]['intro'] = $manga_item['intro'];
+                    $item_data[$key]['detail'] = $manga_item['detail'];
                     $uniq_manga_id = $manga_item['id'];
                 }
                 else{
@@ -114,14 +116,14 @@ class Batch extends CI_Controller {
             
                 $manga_img_url_col = $this->Manga_model->select_manga_media($item['guid']);
 
-                $item_data[$key]['encoded'] = '<![CDATA[<p>体験談投稿</p><p>'.$item_data[$key]['story_name'].'</p>';
+                $item_data[$key]['encoded'] = '<![CDATA[<p>体験談投稿'.$item_data[$key]['story_name'];
 
                 if(!empty($item_data[$key]['story_mama_year_old'])){
-                    $item_data[$key]['encoded'] .= '<p>'.$item_data[$key]['story_mama_year_old'].'</p>';
+                    $item_data[$key]['encoded'] .= $item_data[$key]['story_mama_year_old'].'<br>';
                 }
 
                 if(!empty($item_data[$key]['story_childs_year_old'])){
-                    $item_data[$key]['encoded'] .= '<p>お子さん</p><p>'.$item_data[$key]['story_childs_year_old'].'</p>';
+                    $item_data[$key]['encoded'] .= 'お子さん'.$item_data[$key]['story_childs_year_old'].'</p>';
                 }
 
                 $item_data[$key]['encoded'] .= '<p>'.$item_data[$key]['title'].'</p>';          
@@ -133,6 +135,9 @@ class Batch extends CI_Controller {
                     $item_data[$key]['encoded'] .= '<img src="'.KOSODATE_IMG_URL.$manga_img['img_url'].'"/>';
                 }
                 $item_data[$key]['encoded'] .= '</p>';
+
+                $item_data[$key]['encoded'] .= '<p>イラスト・'.$item_data[$key]['author'].'さん<img src="'.KOSODATE_T_URL.$item_data[$key]['mangaka_icon_url'].'"/></p>';
+                $item_data[$key]['encoded'] .= '<p>'.$item_data[$key]['detail'].'</p>';
             
                 $item_data[$key]['encoded'] .= $insta_tag."]]>";
             }
@@ -168,20 +173,24 @@ class Batch extends CI_Controller {
                 $item_by_manga_id[$manga_id] = $this->search_item_by_manga_id($item_data,['guid'=>$manga_id]); 
 
                 // Adding Related Link data
-                foreach($related_manga_tags_col as $related_manga) {
+                if(!is_null($related_manga_tags_col)) {
+                    foreach($related_manga_tags_col as $related_manga) {
 
-                    $item_by_manga_id[$manga_id]['relatedlink'] .= '<relatedlink title="'.$related_manga['manga_title'].'" link="'.MANGA_URL.$related_manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$related_manga['img_url'].'"/>';
-
-                    //Remove unnecessary data
-                    unset($item_by_manga_id[$manga_id]['author']);
-                    unset($item_by_manga_id[$manga_id]['story_name']);
-                    unset($item_by_manga_id[$manga_id]['story_mama_year_old']);
-                    unset($item_by_manga_id[$manga_id]['story_childs_year_old']);
-                    unset($item_by_manga_id[$manga_id]['intro']);
+                        $item_by_manga_id[$manga_id]['relatedlink'] .= '<relatedlink title="'.$related_manga['manga_title'].'" link="'.MANGA_URL.$related_manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$related_manga['img_url'].'"/>';
                 
+                    }
                 }
+                //Remove unnecessary data
+                unset($item_by_manga_id[$manga_id]['author']);
+                unset($item_by_manga_id[$manga_id]['story_name']);
+                unset($item_by_manga_id[$manga_id]['story_mama_year_old']);
+                unset($item_by_manga_id[$manga_id]['story_childs_year_old']);
+                unset($item_by_manga_id[$manga_id]['intro']);
+                unset($item_by_manga_id[$manga_id]['detail']);
+                unset($item_by_manga_id[$manga_id]['mangaka_icon_url']);
 
             } 
+            // die();
 
             // Preparing RSS-XML
             $xml='<?xml version="1.0" encoding="UTF-8" ?>';
