@@ -34,8 +34,9 @@ class RSS extends CI_Controller
         
         $latest_channel_id = get_channel_id($rss_channel_data);
         $latest_date = get_channel_modified_date($rss_channel_data);
-        $latest_date = strtotime($latest_date);
-
+        // var_dump($latest_date); die();
+        // $latest_date = strtotime($latest_date);
+        // var_dump($latest_date);die();
         $this->output->set_header('Last-Modified: '.$latest_date);
         if(isset($this->input->request_headers()['If-Modified-Since'])) {
             if($latest_date == $this->input->request_headers()['If-Modified-Since']) {

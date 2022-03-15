@@ -148,21 +148,33 @@ if (!function_exists('get_related_manga')) {
 
         $CI = get_instance();
         $CI->load->model('Manga_model','Manga_model');
-
+        
+        $manga_id_arr = [];
         foreach($tags_condition as $condition) {
-            for($manga_count=0;$manga_count < $condition['manga_limit'];$manga_count++){
-                if($condition['manga_id'] != $age_manga[$condition['tags_id']][$manga_count]) {
-                    
-                    $manga_condition = [
-                        'tags_id' => $condition['tags_id'],
-                        'manga_id' => $age_manga[$condition['tags_id']][$manga_count]
-                    ];
-                    
-                    $result[] = $CI->Manga_model->select_manga_by_tags_condition($manga_condition);
-                }
+            $limit_counter = 0;
+            echo $condition['tags_id'].'<br>';
+            foreach($age_manga[$condition['tags_id']] as $manga_id){
+
+              if($manga_id != $condition['manga_id'] && !in_array($manga_id,$manga_id_arr)) {
+
+                $manga_id_arr[] = $manga_id;
+                $limit_counter ++;
+
+                $manga_condition = [
+                    'tags_id' => $condition['tags_id'],
+                    'manga_id' => $manga_id
+                ];
+                echo '<pre>'; var_dump($manga_condition);
+                $result[] = $CI->Manga_model->select_manga_by_tags_condition($manga_condition);
+              }
+
+              if($limit_counter == $condition['manga_limit']) {
+                  continue 2;
+              }
             }
         } 
-        
+        echo '<pre>'; var_dump($result); 
+        // die();
         return $result;
     }
 }

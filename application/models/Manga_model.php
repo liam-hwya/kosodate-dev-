@@ -240,6 +240,7 @@
         $this->db->where('D_MANGAKA.mangaka_state_code',CONST_MANGAKA_STATE_CODE_SHOW);
         $this->db->where_in('D_TAGS_MANGA.tags_id',$tags_id);
         $this->db->order_by('D_TAGS.tags_id', 'DESC');
+        // $this->db->order_by('D_MANGA.manga_date', 'DESC');
         
         return $this->db->get()->result_array();
     }
