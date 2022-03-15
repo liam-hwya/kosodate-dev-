@@ -60,7 +60,7 @@ class Batch extends CI_Controller {
     public function prepareRSS()
     {   
         $d_manga_col = $this->Manga_model->select_manga();
-        // echo '<pre>'; var_dump($d_manga_col); die();
+        
         if(count($d_manga_col) == 0){
           
             return null;
@@ -155,20 +155,20 @@ class Batch extends CI_Controller {
                 $manga_id_tags[$item['id']][$key]['tags_id'] = $item['tags_id']; 
                 $manga_id_tags[$item['id']][$key]['tags_name'] = $item['tags_name'];
             }
-            // echo '<h2>manga ids</h2><pre>'; var_dump($manga_id_tags);
+            
             $age_manga = $this->Manga_model->select_all_age_manga();
 
             foreach($manga_id_tags as $manga_id=>$manga_tags){
 
                 $tags = manga_tag_sort($manga_id,$manga_tags); 
                 $tags_condition = manga_tag_condition($manga_id,$tags);
-                // echo '<pre>'; var_dump($tags_condition); die();
+                
                 //Clear for another manga
                 unset($tags); 
                 
                 //Manga collection of the related tag
                 $related_manga_tags_col = get_related_manga($age_manga,$tags_condition); 
-                // echo '<h2>Tags condition</h2><pre>'; var_dump($related_manga_tags_col); die();
+                
                 //Create new item data by related manga id 
                 $item_by_manga_id[$manga_id] = $this->search_item_by_manga_id($item_data,['guid'=>$manga_id]); 
 
@@ -190,7 +190,7 @@ class Batch extends CI_Controller {
                 unset($item_by_manga_id[$manga_id]['mangaka_icon_url']);
 
             } 
-            // die();
+            
 
             // Preparing RSS-XML
             $xml='<?xml version="1.0" encoding="UTF-8" ?>';

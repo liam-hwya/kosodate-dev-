@@ -151,8 +151,8 @@ if (!function_exists('get_related_manga')) {
         
         $manga_id_arr = [];
         foreach($tags_condition as $condition) {
+
             $limit_counter = 0;
-            echo $condition['tags_id'].'<br>';
             foreach($age_manga[$condition['tags_id']] as $manga_id){
 
               if($manga_id != $condition['manga_id'] && !in_array($manga_id,$manga_id_arr)) {
@@ -164,7 +164,6 @@ if (!function_exists('get_related_manga')) {
                     'tags_id' => $condition['tags_id'],
                     'manga_id' => $manga_id
                 ];
-                echo '<pre>'; var_dump($manga_condition);
                 $result[] = $CI->Manga_model->select_manga_by_tags_condition($manga_condition);
               }
 
@@ -172,9 +171,8 @@ if (!function_exists('get_related_manga')) {
                   continue 2;
               }
             }
-        } 
-        echo '<pre>'; var_dump($result); 
-        // die();
+        }
+
         return $result;
     }
 }
