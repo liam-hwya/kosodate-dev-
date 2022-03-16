@@ -44,7 +44,6 @@
 
     <div id="wrapper">
 
-
         <div class="container">
             <h3>RSS posting screen</h3>
 

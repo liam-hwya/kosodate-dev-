@@ -29,16 +29,7 @@ class Ad_modify_rss extends CI_Controller{
         $manga_signup_url_str = "/admin/ad_modify_rss/sign_up";
         $manga_signup_url = site_url($manga_signup_url_str);
 
-        $channel = $this->RSS_log_channel_model->select_latest_channel();
-        $channel_id = get_channel_id($channel);
-        if(isset($_SESSION['admin_control'])) {
-            $newly_registered_items = $this->RSS_log_item_model->select_latest_items($channel_id);
-        }else{
-            $newly_registered_items = null;
-        }
-
         $view_data['release_date'] = nad_jp_date('','Y-m-d').' '.nad_jp_date('','Y-m-d',$end_date=true);
-        $view_data['newly_registered_items'] = $newly_registered_items;
         $view_data['manga_detail_url'] = $manga_detail_url;
         $view_data['manga_execute_url'] = $manga_execute_url;
         $view_data['manga_signup_url'] = $manga_signup_url;
@@ -95,27 +86,12 @@ class Ad_modify_rss extends CI_Controller{
     public function detail($index = FALSE) {
         
         if(!$index){
-            return "There is no manga id";
-            die();
-        }
-
-        $action = $this->input->get('action');
-        if($action == 'register'){
-            $manga_detail = $this->Manga_model->select_manga_detail($index);
-        }elseif($action == 'update'){
-            $manga_detail = $this->RSS_log_item_model->select_items_by_id($index);
-        }
-        if(empty($manga_detail)) {
-            $manga_detail = null;
+            redirect('/ad_modify_rss','refresh');
         }
 
         $manga_media = $this->Manga_model->select_manga_media($index);
         $manga_tags = $this->Manga_model->select_tags_for_manga($index);
-        // var_dump($manga_detail);die();
-        $register_url_str = "/admin/ad_modify_rss/register";
-        $register_url = site_url($register_url_str);
-        $update_url_str = "/admin/ad_modify_rss/update";
-        $update_url = site_url($update_url_str);
+        
 
         if(!empty($manga_tags)){
             $tags = manga_tag_sort($index,$manga_tags); //Sort the manga tags
@@ -126,17 +102,49 @@ class Ad_modify_rss extends CI_Controller{
             $related_manga = null;
         }
 
-        $view_data['manga_detail'] = $manga_detail;
+        $insta = $this->RSS_insta_model->select_insta();
+        $insta_tag = (is_null($insta)? '': $insta->tag);
+
+        $action = $this->input->get('action');
+        if(is_null($action) || empty($action)){
+            redirect('/ad_modify_rss','refresh');
+        }
+        
+        if($action == 'register'){
+            $manga = $this->Manga_model->select_manga_detail($index);
+            
+            if(!is_null($manga)){
+                $data = [
+                    'manga' => $manga,
+                    'manga_media' => $manga_media,
+                    'related_manga' => $related_manga,
+                    'insta_tag' => $insta_tag
+                ];
+                $rss_manga = $this->get_rss_manga($data);
+                $manga['description'] = $rss_manga['description'];
+                $manga['encoded'] = $rss_manga['encoded'];
+            }
+            
+        }elseif($action == 'update'){
+
+            $manga = $this->RSS_log_item_model->select_items_by_id($index);
+            // echo '<pre>'; var_dump($manga['pubDate']); die();
+        }
+        
+        // echo '<pre>'; var_dump($manga); die();
+        $register_url_str = "/admin/ad_modify_rss/register";
+        $register_url = site_url($register_url_str);
+        $update_url_str = "/admin/ad_modify_rss/update";
+        $update_url = site_url($update_url_str);
+
+        $view_data['manga'] = $manga;
         $view_data['manga_media'] = $manga_media;
         $view_data['manga_id'] = $index;
         $view_data['related_manga'] = $related_manga;
         $view_data['register_url'] = $register_url;
         $view_data['update_url'] = $update_url;
+        $view_data['action'] = $action;
         
-        if(!empty($action)){
-            $view_data['action'] = $action;
-        }
-
         $this->load->view('rss/detail',$view_data);
 
     }
@@ -155,7 +163,7 @@ class Ad_modify_rss extends CI_Controller{
             $author = $this->Manga_model->select_mangaka_for_manga($manga_id);
             $manga_media = $this->Manga_model->select_manga_media($manga_id);
             $manga_tags = $this->Manga_model->select_tags_for_manga($manga_id);
-
+            
             if(!empty($manga_tags)){
                 $tags = manga_tag_sort($manga_id,$manga_tags); //Sort the manga tags
                 $tags_condition = manga_tag_condition($manga_id,$tags); //Get the condition for manga tags.
@@ -168,55 +176,23 @@ class Ad_modify_rss extends CI_Controller{
             $insta = $this->RSS_insta_model->select_insta();
             $insta_tag = (is_null($insta)? '': $insta->tag);
             
-            $rss_manga['title'] = $manga->manga_title;
-            $rss_manga['link'] = MANGA_URL.$manga->manga_id;
-            $rss_manga['guid'] = $manga->manga_id;
-            $rss_manga['category'] = '<![CDATA[ママコマ漫画]]>';
-            $rss_manga['description'] = "こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。".$manga->author."～「".$manga->manga_title."」をお楽しみください。";
-            $rss_manga['pubDate'] = nad_jp_date();
-            $rss_manga['modifiedDate'] = null;
-            $rss_manga['delete'] = 0;
-            $rss_manga['enclosure'] = (empty($manga_media[0]['img_url']))? '':KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
-            $rss_manga['thumbnail'] = (empty($manga_media[0]['img_url']))? '':KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
-
-            // Encoded tags
-            $rss_manga['encoded'] = '<![CDATA[<p>体験談投稿'.$manga->story_name;
-            if(!empty($manga->story_mama_year_old)){
-                $rss_manga['encoded'] .= $manga->story_mama_year_old.'<br>';
-            }
-            if(!empty($manga->story_childs_year_old)){
-                $rss_manga['encoded'] .= 'お子さん'.$manga->story_childs_year_old.'</p>';
-            }
-            $rss_manga['encoded'] .= '<p>'.$manga->manga_title.'</p>';          
-            $rss_manga['encoded'] .= '<p>'.$manga->manga_intro.'</p>';
-            $rss_manga['encoded'] .= '<p>'.nad_jp_date().'</p><p>';
-
-            foreach($manga_media as $media) {
-                $rss_manga['encoded'] .= '<img src="'.KOSODATE_IMG_URL.$media['img_url'].'"/>';
-            }
-
-            $rss_manga['encoded'] .= '</p>';
-            
-            $item_data[$key]['encoded'] .= '<p>イラスト・'.$manga->author.'さん<img src="'.KOSODATE_IMG_SHARE_URL.$manga->mangaka_icon_url.'"/></p>';
-            $item_data[$key]['encoded'] .= '<p>'.$manga->detail.'</p>';
-
-            $rss_manga['encoded'] .= $insta_tag."]]>";
-
-            // Related Tags
-            $rss_manga['relatedlink'] = '';
-
-            if(!is_null($related_manga)){
-                foreach($related_manga as $manga){
-                    $rss_manga['relatedlink'] .= '<relatedlink title="'.$manga['manga_title'].'" link="'.MANGA_URL.$manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$manga['img_url'].'"/>';
-                }
-            }
+            $data = [
+                'manga' => $manga,
+                'manga_media' => $manga_media,
+                'related_manga' => $related_manga,
+                'insta_tag' => $insta_tag
+            ];
+            $rss_manga = $this->get_rss_manga($data);
 
             $channel = $this->RSS_log_channel_model->select_latest_channel();
             $channel_id = get_channel_id($channel);
-            $items = $this->RSS_log_item_model->select_items_by_channel_id($channel_id);
-            if(count($items) <= CONST_RSS_MANGA_ITEM_NUM && $this->unique_manga_id($items,$manga_id)) {
+            $items_from_log = $this->RSS_log_item_model->select_items_by_channel_id($channel_id);
+            
+            if(count($items_from_log) <= CONST_RSS_MANGA_ITEM_NUM && $this->is_unique_manga_id($items_from_log,$manga_id)) {
                 if(isset($_SESSION['register_manga'])) {
-                    $_SESSION['register_manga'][$manga_id] = $rss_manga;
+                    if($this->is_manga_in_session($session=$_SESSION['register_manga'],$manga_id)) {
+                        $_SESSION['register_manga'][$manga_id] = $rss_manga;
+                    }
                 }else {
                     $register_manga[$manga_id] = $rss_manga;
                     $this->session->set_userdata('register_manga',$register_manga); 
@@ -237,7 +213,7 @@ class Ad_modify_rss extends CI_Controller{
         }
         $manga = $this->input->post('manga');
         $related_manga = $this->input->post('related_manga');
-        
+        // echo '<pre>'; var_dump($manga); die();
         $manga_id = $manga['guid'];
         $rss_manga['guid'] = $manga['guid'];
         $rss_manga['title'] = $manga['title'];
@@ -253,17 +229,19 @@ class Ad_modify_rss extends CI_Controller{
         $relatedlink = '';
         if (!is_null($related_manga)) {
             foreach ($related_manga as $manga) {
-                $relatedlink .= '<relatedlink title="'.$manga['manga_title'].'" link="'.MANGA_URL.$manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$manga['img_url'].'"/>';
+                $relatedlink .= '<relatedlink title="'.$manga['manga_title'].'" link="'.MANGA_URL.$manga['manga_id'].'"/>';
             }
         }
         $rss_manga['relatedlink'] = $relatedlink;
         
-        $rss_manga['modifiedDate'] = nad_jp_date();
-        $rss_manga['pubDate'] = nad_jp_date();
-        $rss_manga['last_time'] = nad_jp_date();
+        $rss_manga['modifiedDate'] = nad_jp_date('','RFC822');
+        $rss_manga['last_time'] = nad_jp_date('','RFC822');
 
         // Set data in session
         if(isset($_SESSION['update_manga'])) {
+            if($this->is_manga_in_session($session=$_SESSION['update_manga'],$manga_id)) {
+                $_SESSION['update_manga'][$manga_id] = $rss_manga;
+            }
             $_SESSION['update_manga'][$manga_id] = $rss_manga;
         }else {
             $update_manga[$manga_id] = $rss_manga;
@@ -361,10 +339,10 @@ class Ad_modify_rss extends CI_Controller{
 
     }
 
-    private function unique_manga_id($items,$manga_id) {
+    private function is_unique_manga_id($items_from_log,$manga_id) {
         $id = [];
 
-        foreach($items as $item) {
+        foreach($items_from_log as $item) {
             $id[] = $item['guid'];
         }
 
@@ -372,6 +350,69 @@ class Ad_modify_rss extends CI_Controller{
             return false;
         }
 
+        return true;
+    }
+
+    private function get_rss_manga($data) {
+
+        $manga = $data['manga'];
+        $manga_media = $data['manga_media'];
+        $related_manga = $data['related_manga'];
+        $insta_tag = $data['insta_tag'];
+
+        $rss_manga['title'] = $manga['title'];
+        $rss_manga['link'] = MANGA_URL.$manga['id'];
+        $rss_manga['guid'] = $manga['id'];
+        $rss_manga['category'] = '<![CDATA[ママコマ漫画]]>';
+        $rss_manga['description'] = "<![CDATA[こそだてDAYS（こそだてデイズ）は子育てママと作る0～6歳児ママのためのWebメディアです。ママ達の子育て体験談を無料で漫画化し、赤ちゃん期から入学までに必要な育児情報を配信しています。".$manga['author']."～「".$manga['title']."」をお楽しみください。]]>";
+        $rss_manga['pubDate'] = nad_jp_date('','RFC822');
+        $rss_manga['modifiedDate'] = null;
+        $rss_manga['delete'] = 0;
+        $rss_manga['enclosure'] = (empty($manga_media[0]['img_url']))? '':KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
+        $rss_manga['thumbnail'] = (empty($manga_media[0]['img_url']))? '':KOSODATE_IMG_URL.$manga_media[0]['img_url']; //first image of the manga media
+
+        // Encoded tags
+        $rss_manga['encoded'] = '<![CDATA[<p>体験談投稿'.$manga['story_name'];
+        if(!empty($manga['story_mama_year_old'])){
+            $rss_manga['encoded'] .= $manga['story_mama_year_old'].'<br>';
+        }
+        if(!empty($manga['story_childs_year_old'])){
+            $rss_manga['encoded'] .= 'お子さん'.$manga['story_childs_year_old'].'</p>';
+        }
+        $rss_manga['encoded'] .= '<p>'.$manga['title'].'</p>';          
+        $rss_manga['encoded'] .= '<p>'.$manga['intro'].'</p>';
+        $rss_manga['encoded'] .= '<p>'.nad_jp_date().'</p><p>';
+
+        foreach($manga_media as $media) {
+            $rss_manga['encoded'] .= '<img src="'.KOSODATE_IMG_URL.$media['img_url'].'"/>';
+        }
+
+        $rss_manga['encoded'] .= '</p>';
+            
+        $rss_manga['encoded'] .= '<p>イラスト・'.$manga['author'].'さん<img src="'.KOSODATE_T_URL.$manga['mangaka_icon_url'].'"/></p>';
+        $rss_manga['encoded'] .= '<p>'.$manga['detail'].'</p>';
+
+        $rss_manga['encoded'] .= $insta_tag."]]>";
+
+        // Related Tags
+        $rss_manga['relatedlink'] = '';
+
+        if(!is_null($related_manga)){
+            foreach($related_manga as $manga){
+                $rss_manga['relatedlink'] .= '<relatedlink title="'.$manga['manga_title'].'" link="'.MANGA_URL.$manga['manga_id'].'"/>';
+            }
+        }
+
+        return $rss_manga;
+    }
+
+    private function is_manga_in_session($session,$manga_id) {
+
+        foreach($session as $element){
+            if($element['guid'] == $manga_id) {
+                return false;
+            }
+        }
         return true;
     }
 

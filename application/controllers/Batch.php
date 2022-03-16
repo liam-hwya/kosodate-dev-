@@ -84,7 +84,7 @@ class Batch extends CI_Controller {
                     $item_data[$key]['link'] = MANGA_URL.$manga_item['id'];
                     $item_data[$key]['guid'] = $manga_item['id'];
                     $item_data[$key]['category'] = '<![CDATA[ママコマ漫画]]>';
-                    $item_data[$key]['description'] = CONST_HEADER_META_DESCRIPTION.$manga_item['author']."～「".$manga_item['title']."」をお楽しみください。";
+                    $item_data[$key]['description'] = '<![CDATA['.CONST_HEADER_META_DESCRIPTION.$manga_item['author']."～「".$manga_item['title']."」をお楽しみください。".']]>';
                     $item_data[$key]['pubDate'] = nad_jp_date();
                     $item_data[$key]['modifiedDate'] = null;
                     $item_data[$key]['delete'] = 0;
@@ -176,7 +176,7 @@ class Batch extends CI_Controller {
                 if(!is_null($related_manga_tags_col)) {
                     foreach($related_manga_tags_col as $related_manga) {
 
-                        $item_by_manga_id[$manga_id]['relatedlink'] .= '<relatedlink title="'.$related_manga['manga_title'].'" link="'.MANGA_URL.$related_manga['manga_id'].'" thumbnail="'.KOSODATE_IMG_URL.$related_manga['img_url'].'"/>';
+                        $item_by_manga_id[$manga_id]['relatedlink'] .= '<relatedlink title="'.$related_manga['manga_title'].'" link="'.MANGA_URL.$related_manga['manga_id'].'"/>';
                 
                     }
                 }
@@ -193,8 +193,8 @@ class Batch extends CI_Controller {
             
 
             // Preparing RSS-XML
-            $xml='<?xml version="1.0" encoding="UTF-8" ?>';
-            $xml.='<channel>';
+            /** $xml='<?xml version="1.0" encoding="UTF-8" ?>'; **/
+            $xml ='<channel>';
             $xml.='<title>'.$channel_data['title'].'</title>';
             $xml.='<link>'.$channel_data['link'].'</link>';
             $xml.='<description>'.$channel_data['description'].'</description>';

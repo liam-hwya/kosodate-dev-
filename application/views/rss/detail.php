@@ -48,9 +48,9 @@
         <div class="container">
             <h3>RSS registration screen</h3>
 
-            <?php if(is_null($manga_detail)): ?>
+            <?php if(is_null($manga)): ?>
 
-            <p>There is no manga related with this manga id <b><?= $manga_id ?></b></p>
+                <p>There is no manga related with this manga id <b><?= $manga_id ?></b></p>
 
             <?php else: ?>
 
@@ -58,34 +58,38 @@
                
                     <div class="flex">
                         <div>Article ID</div> 
-                        <div><?= $manga_detail->manga_id ?></div>
+                        <div><?= $manga['id'] ?></div>
                     </div>
                 
                     <div class="flex">
                         <p>TItle</p>
-                        <p><b><?= $manga_detail->manga_title ?></b></p>
+                        <p><b><?= $manga['title'] ?></b></p>
                     </div>
 
                     <div class="flex">
                         <p>Link</p>
-                        <p><b><?= MANGA_URL.$manga_detail->manga_id ?></b></p>
+                        <p><b><?= MANGA_URL.$manga['id'] ?></b></p>
                     </div>
 
                     <div class="flex">
                         <p>Explanation</p>
-                        <p><b><?= $manga_detail->manga_intro ?></b></p>
+                        <textarea id="" cols="30" rows="10">
+                            <?= $manga['description'] ?>
+                        </textarea>
                     </div>
 
                     <div class="flex">
                         <p>Contents</p>
-                        <p><b><?= $manga_detail->manga_detail ?></b></p>
+                        <textarea name="manga[encoded]" id="" cols="30" rows="10">
+                            <?= $manga['encoded'] ?>
+                        </textarea>
                     </div>
 
                     <div class="flex">
                         <p>Image file associated with the article</p>
                         <?php if(!is_null($manga_media)): ?>
                             <p>
-                                <b><?= (empty($media['img_url']))? '' : KOSODATE_IMG_URL.$manga_media[0]['img_url'] ?></b>
+                                <b><?= (empty($manga_media))? '' : KOSODATE_IMG_URL.$manga_media[0]['img_url'] ?></b>
                             </p>
                         <?php endif; ?>
                     </div>
@@ -123,30 +127,30 @@
 
                     <div class="flex">
                         <div>Article ID</div> 
-                        <input type="hidden" name="manga[guid]" value="<?= $manga_detail[0]['guid'] ?>">
+                        <input type="text" name="manga[guid]" value="<?= $manga['guid'] ?>" readonly>
                     </div>
                 
                     <div class="flex">
                         <p>TItle</p>
-                        <input type="text" name="manga[title]" value="<?= $manga_detail[0]['title'] ?>">
+                        <input type="text" name="manga[title]" value="<?= $manga['title'] ?>">
                     </div>
 
                     <div class="flex">
                         <p>Link</p>
-                        <input type="text" name="manga[link]" value="<?= MANGA_URL.$manga_detail[0]['guid'] ?>">
+                        <input type="text" name="manga[link]" value="<?= MANGA_URL.$manga['guid'] ?>">
                     </div>
 
                     <div class="flex">
                         <p>Explanation</p>
                         <textarea name="manga[description]" id="" cols="30" rows="10">
-                            <?= $manga_detail[0]['description'] ?>
+                            <?= $manga['description'] ?>
                         </textarea>
                     </div>
 
                     <div class="flex">
                         <p>Contents</p>
                         <textarea name="manga[encoded]" id="" cols="30" rows="10">
-                            <?= $manga_detail[0]['encoded'] ?>
+                            <?= $manga['encoded'] ?>
                         </textarea>
                     </div>
 
@@ -164,7 +168,7 @@
                         <?php if(!is_null($manga_media)): ?>
                             <p>
                                 <?php foreach($manga_media as $media): ?>
-                                    <input type="text" name="manga[img_url][enclosure][]" value="<?= KOSODATE_IMG_URL.$media['img_url'] ?>">
+                                    <input type="text" name="manga[img_url][enclosure][]" value="<?= KOSODATE_IMG_URL.$media['img_url'] ?>"><br>
                                 <?php endforeach; ?>
                             </p>
                         <?php endif; ?>
@@ -205,8 +209,9 @@
                     ?>
 
                     <!-- No edited manga detail information -->
-                    <input type="hidden" name="manga[category]" value="<?= $manga_detail[0]['category'] ?>" />
-                    <input type="hidden" name="manga[pubDate]" value="<?= $manga_detail[0]['pubDate'] ?>" />
+                    
+                    <input type="hidden" name="manga[category]" value="<?= $manga['category'] ?>" />
+                    <input type="hidden" name="manga[pubDate]" value="<?= $manga['pubDate'] ?>" />
                     
                     <input type="submit" name="manga_update" value="update">
 

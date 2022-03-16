@@ -267,8 +267,19 @@
 
     public function select_manga_detail($manga_id) {
 
-        $this->db->select('*');
+        $this->db->select('D_MANGA.manga_id AS id');
+        $this->db->select('D_MANGA.manga_title AS title');
+        $this->db->select('D_MANGA.manga_url AS link');
+        $this->db->select('D_MANGA.manga_intro AS intro');
+        $this->db->select('D_MANGA.manga_date AS date');
+        $this->db->select('D_MANGA.manga_detail AS detail');
+        $this->db->select('D_MANGA.story_name');
+        $this->db->select('D_MANGA.story_mama_year_old');
+        $this->db->select('D_MANGA.story_childs_year_old');
+        $this->db->select('D_MANGA.manga_deleted');
+        $this->db->select('D_MANGA.manga_state_code');
         $this->db->select('D_MANGAKA.mangaka_nickname AS author');
+        $this->db->select('D_MANGAKA.mangaka_icon_url');
         $this->db->from('d_manga');
         $this->db->join('D_MANGAKA','D_MANGA.mangaka_id = D_MANGAKA.mangaka_id','left');
         $this->db->where('D_MANGA.manga_deleted',NO_DELETE_FLAG);
@@ -276,7 +287,7 @@
         $this->db->where('D_MANGAKA.mangaka_state_code',CONST_MANGAKA_STATE_CODE_SHOW);
         $this->db->where('manga_id',$manga_id);
 
-        return $this->db->get()->row();
+        return $this->db->get()->row_array();
     }
 
     public function select_tags_for_manga($manga_id) {

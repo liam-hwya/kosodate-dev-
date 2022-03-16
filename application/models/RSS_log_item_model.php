@@ -37,7 +37,7 @@
         $this->db->from('RSS_LOG_ITEM');
         $this->db->where('guid',$log_id);
 
-        return $this->db->get()->result_array();
+        return $this->db->get()->row_array();
     }
 
     public function select_latest_items($channel_id) {
