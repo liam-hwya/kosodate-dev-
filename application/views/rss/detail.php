@@ -123,8 +123,12 @@
                 
                 <?php elseif(isset($action) && $action=='update'): ?>
 
+                    
                 <form action="<?= $update_url ?>" method="POST">
 
+                    <input type="hidden" name="manga[category]" value="<?= $manga['category'] ?>" />
+                    <input type="hidden" name="manga[pubDate]" value="<?= $manga['pubDate'] ?>" />
+                    
                     <div class="flex">
                         <div>Article ID</div> 
                         <input type="text" name="manga[guid]" value="<?= $manga['guid'] ?>" readonly>
@@ -194,7 +198,7 @@
                             </select>
                         </p>
                     </div>
-
+                    
                     <?php 
 
                         if(!is_null($related_manga)):
@@ -210,8 +214,6 @@
 
                     <!-- No edited manga detail information -->
                     
-                    <input type="hidden" name="manga[category]" value="<?= $manga['category'] ?>" />
-                    <input type="hidden" name="manga[pubDate]" value="<?= $manga['pubDate'] ?>" />
                     
                     <input type="submit" name="manga_update" value="update">
 
